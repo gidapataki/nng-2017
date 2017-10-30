@@ -1,11 +1,25 @@
 #include "Number.hpp"
 
 #include <iostream>
-
-#include <boost/lexical_cast.hpp>
+#include <vector>
 
 int main() {
-	auto a = boost::lexical_cast<Number>("1/2");
-	auto b = boost::lexical_cast<Number>("3/4");
-	std::cerr << a+b << " " << a-b << std::endl;
+	std::size_t numberOfTests = 0;
+	std::cin >> numberOfTests;
+	for (std::size_t test = 0; test < numberOfTests; ++test) {
+		std::size_t numberOfRacers;
+		std::size_t numberOfBookies;
+		std::cin >> numberOfRacers >> numberOfBookies;
+		std::vector<std::vector<Number>> racerOfferses;
+		for (std::size_t racer = 0; racer < numberOfRacers; ++racer) {
+			std::vector<Number> racerOffers;
+			racerOffers.reserve(numberOfBookies);
+			for (std::size_t bookie = 0; bookie < numberOfBookies; ++bookie) {
+				Number offer;
+				std::cin >> offer;
+				racerOffers.push_back(offer);
+			}
+			racerOfferses.push_back(std::move(racerOffers));
+		}
+	}
 }
