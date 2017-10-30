@@ -1,3 +1,6 @@
+#ifndef NUMBER_HPP_
+#define NUMBER_HPP_
+
 #include <iosfwd>
 
 #include <boost/operators.hpp>
@@ -29,3 +32,5 @@ private:
 	int p = 0;
 	unsigned q = 1;
 };
+
+#endif // NUMBER_HPP_
