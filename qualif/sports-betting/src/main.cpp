@@ -22,6 +22,13 @@ int main() {
 			}
 			racerOfferses.push_back(std::move(racerOffers));
 		}
-		std::cout << solve(racerOfferses) << std::endl;
+		std::vector<std::size_t> bookieLimits;
+		bookieLimits.reserve(numberOfBookies);
+		for (std::size_t bookie = 0; bookie < numberOfBookies; ++bookie) {
+			std::size_t bookieLimit = 0;
+			std::cin >> bookieLimit;
+			bookieLimits.push_back(bookieLimit);
+		}
+		std::cout << solve(racerOfferses, bookieLimits) << std::endl;
 	}
 }
