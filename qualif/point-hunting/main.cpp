@@ -48,14 +48,20 @@ int bruteForceMaxScore(int width, int height) {
         }
     }
 
-    std::cout << best_s << ", " << best_r << std::endl;
+    // std::cout << best_s << ", " << best_r << std::endl;
 
     return max;
 }
 
 int main() {
-    std::cout << bruteForceMaxScore(1, 1) << std::endl;
-    std::cout << bruteForceMaxScore(2, 1) << std::endl;
-    std::cout << bruteForceMaxScore(2, 2) << std::endl;
-    std::cout << bruteForceMaxScore(10, 7) << std::endl;
+    for (int y = 1; y <= 12; ++y) {
+        for (int x = 1; x <= 12; ++x) {
+            std::cout << bruteForceMaxScore(x, y) << " ";
+        }
+        std::cout << std::endl;
+    }
+    // std::cout << bruteForceMaxScore(1, 1) << std::endl;
+    // std::cout << bruteForceMaxScore(2, 1) << std::endl;
+    // std::cout << bruteForceMaxScore(2, 2) << std::endl;
+    // std::cout << bruteForceMaxScore(10, 7) << std::endl;
 }
