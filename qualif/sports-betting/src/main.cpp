@@ -1,4 +1,5 @@
 #include "Number.hpp"
+#include "solve.hpp"
 
 #include <iostream>
 #include <vector>
@@ -21,5 +22,6 @@ int main() {
 			}
 			racerOfferses.push_back(std::move(racerOffers));
 		}
+		std::cout << solve(racerOfferses) << std::endl;
 	}
 }
