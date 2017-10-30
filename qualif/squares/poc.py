@@ -46,7 +46,7 @@ def solve(digits):
     for d in digits:
         vs[d] += 1
     x, k = [0], 1
-    for i in range(len(digits) / 3):
+    for i in range(len(digits) // 3):
         x, k = sieve(vs, x, k), k + 1
     print(find_best(vs, x))
 
