@@ -2,14 +2,19 @@
 
 #include <cassert>
 
+void Field::start() {
+    assert(score == 0);
+    score = cube.bottom;
+}
+
 void Field::roll(bool direction) {
     if (direction) {
         assert(px < width - 1);
-        cube.rotateRight();
+        cube.rollRight();
         ++px;
     } else {
         assert(py < height - 1);
-        cube.rotateUp();
+        cube.rollUp();
         ++py;
     }
     score += cube.bottom;

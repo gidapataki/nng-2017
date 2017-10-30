@@ -2,11 +2,20 @@
 
 class Cube {
 public:
-    void rotateUp();
-    void rotateRight();
+    Cube() = default;
 
-    void rotateDown();
-    void rotateLeft();
+    // side from [0, 5]
+    // rotation from [0, 3]
+    Cube(int side, int rotations);
+
+    void rollUp();
+    void rollRight();
+
+    void rollDown();
+    void rollLeft();
+
+    void rotateCW();
+    void rotateCCW();
 
     int bottom = 1;
     int top = 6;

@@ -15,5 +15,6 @@ public:
 
     int score = 0;
 
+    void start(); // init score
     void roll(bool direction); // true right, false up
 };
