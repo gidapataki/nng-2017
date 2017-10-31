@@ -5,13 +5,32 @@
 #include "Cube.h"
 #include "Field.h"
 
+std::ostream& operator<<(std::ostream& os, const std::vector<bool>& v) {
+    for (bool b : v) {
+        os << (b ? '>' : '^');
+    }
+    return os;
+}
+
+struct History {
+    Cube cube;
+    int rotations;
+    int side;
+    std::vector<bool> decisions;
+};
+
+std::ostream& operator<<(std::ostream& os, const History& h) {
+    os << "cube(" << h.side << ", " << h.rotations << "): " << h.cube << " (" << h.decisions << ")";
+    return os;
+}
+
 int doSingleTest(
-    int side, int rotations,
+    Cube cube,
     int width, int height,
     const std::vector<bool>& decisions)
 {
     Field field;
-    field.cube = Cube{side, rotations};
+    field.cube = cube;
 
     field.width = width;
     field.height = height;
@@ -31,32 +50,47 @@ int bruteForceMaxScore(int width, int height) {
     std::sort(decisions.begin(), decisions.end());
 
     int max = 0;
-    int best_r = -1;
-    int best_s = -1;
-    std::vector<bool> best_decisions;
-    for (int s = 0; s < 6; ++s) {
+    std::vector<History> best_histories;
+    for (int s = 4; s <= 6; ++s) {
         for (int r = 0; r < 4; ++r) {
             do {
-                int score = doSingleTest(s, r, width, height, decisions);
+                Cube cube{s, r};
+                int score = doSingleTest(cube, width, height, decisions);
                 if (score > max) {
                     max = score;
-                    best_r = r;
-                    best_s = s;
-                    best_decisions = decisions;
+                    best_histories.clear();
+                }
+                if (score == max) {
+                    History h;
+                    h.cube = cube;
+                    h.side = s;
+                    h.rotations = r;
+                    h.decisions = decisions;
+                    best_histories.push_back(h);
                 }
             } while (std::next_permutation(decisions.begin(), decisions.end()));
         }
     }
 
-    // std::cout << best_s << ", " << best_r << std::endl;
+    // for (auto& h : best_histories) {
+    //     std::cout << "(" << width << "," << height << ") " << h << std::endl;
+    // }
 
     return max;
 }
 
 int main() {
-    for (int y = 1; y <= 12; ++y) {
-        for (int x = 1; x <= 12; ++x) {
-            std::cout << bruteForceMaxScore(x, y) << " ";
+    int size = 15;
+    std::vector<std::vector<int>> scores(15, std::vector<int>{15});
+
+    for (int y = 1; y <= 35; ++y) {
+        for (int x = 1; x <= 35; ++x) {
+            if (x + y > 25) {
+                continue;
+            }
+            auto score = bruteForceMaxScore(x, y);
+            // scores[x-1][y-1] = score;
+            std::cout << score << " ";
         }
         std::cout << std::endl;
     }

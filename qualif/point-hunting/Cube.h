@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ostream>
+
 class Cube {
 public:
     Cube() = default;
@@ -26,3 +28,5 @@ public:
     int up = 5;
     int down = 2;
 };
+
+std::ostream& operator<<(std::ostream& os, const Cube& c);
