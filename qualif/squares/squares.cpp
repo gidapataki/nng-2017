@@ -4,6 +4,7 @@
 #include <cassert>
 
 
+
 using Numbers = std::vector<uint64_t>;
 
 struct Digits {
@@ -168,9 +169,7 @@ void solve(const std::vector<int>& digits) {
 	std::cout << find_best(ds, vec, k) << std::endl;
 }
 
-
-
-int main() {
+void solve_example() {
     solve({0, 4, 2});
     solve({0, 0, 1, 0, 0, 1});
 	solve({0, 6, 0, 9, 7, 8, 6, 3, 0, 6, 8, 7});
@@ -182,6 +181,25 @@ int main() {
 		7, 8, 9, 7, 7, 5, 3, 3, 3,
 		6, 4, 4, 7, 3, 3, 5, 3, 9,
 		6, 8, 9, 1, 3, 0, 7, 3, 4});
+}
 
+void solve_input() {
+	int t;
+	std::cin >> t;
+	for (int i = 0; i < t; ++i) {
+		int n;
+		std::cin >> n;
+		std::vector<int> digits;
+		for (int j = 0; j < n; ++j) {
+			int d;
+			std::cin >> d;
+			digits.push_back(d);
+		}
+		solve(digits);
+	}
+}
+
+int main() {
+	solve_input();
 	return 0;
 }
