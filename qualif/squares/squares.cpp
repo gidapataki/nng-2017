@@ -4,7 +4,7 @@
 #include <cassert>
 
 
-using Numbers = std::vector<uint64_t>;
+using Numbers = std::vector<unsigned>;
 
 struct Digits {
 	uint8_t v[10] = {};
@@ -26,8 +26,8 @@ std::ostream& operator<<(std::ostream& stream, const Digits& ds) {
 	return stream;
 }
 
-constexpr uint64_t pow10(int k) {
-	constexpr uint64_t value[10] = {
+constexpr unsigned pow10(int n) {
+	constexpr unsigned value[9] = {
 		1,           // 10^0
 		10,          // 10^1
 		100,         // 10^2
@@ -37,10 +37,10 @@ constexpr uint64_t pow10(int k) {
 		1000000,     // 10^6
 		10000000,    // 10^7
 		100000000,   // 10^8
-		1000000000,  // 10^9
 	};
-	return value[k];
+	return value[n];
 }
+
 
 Digits digits(uint64_t n, int width) {
 	Digits result;
@@ -54,7 +54,7 @@ Digits digits(uint64_t n, int width) {
 
 Digits pow_digits(uint64_t n, int width) {
 	Digits result;
-	auto value = (n * n) % pow10(width);
+	auto value = (n * n);
 	while (width-- > 0) {
 		++result.v[value % 10];
 		value /= 10;
@@ -89,8 +89,8 @@ bool accept(const Digits& provided, const Digits& required) {
 }
 
 void sieve(const Digits& ds, Numbers& vec, int width) {
-	Numbers result;
-	uint64_t mul = pow10(width - 1);
+	Numbers out;
+	auto mul = pow10(width - 1);
 
 	// Note: nesting is important here, so output becomes sorted.
 	for (int i = 0; i < 10; ++i) {
@@ -99,11 +99,12 @@ void sieve(const Digits& ds, Numbers& vec, int width) {
 			auto px_digits = digits(px, width);
 			px_digits += pow_digits(px, width);
 			if (accept(ds, px_digits)) {
-				result.push_back(px);
+				out.push_back(px);
 			}
 		}
 	}
-	vec.swap(result);
+
+	vec.swap(out);
 }
 
 bool accept_exact(const Digits& provided, const Digits& required) {
@@ -121,7 +122,7 @@ bool accept_exact(const Digits& provided, const Digits& required) {
 }
 
 uint64_t find_best(const Digits& ds, const Numbers& vec, int width) {
-	uint64_t mul = pow10(width - 1);
+	auto mul = pow10(width - 1);
 	for (int i = 10; i-- > 0;) {
 		for (auto it = vec.rbegin(), ie = vec.rend(); it != ie; ++it) {
 			auto p = *it;
@@ -157,13 +158,12 @@ void solve(const std::vector<int>& digits) {
 }
 
 void solve_example() {
-    solve({0, 4, 2});
-    solve({0, 0, 1, 0, 0, 1});
+	solve({0, 4, 2});
+	solve({0, 0, 1, 0, 0, 1});
 	solve({0, 6, 0, 9, 7, 8, 6, 3, 0, 6, 8, 7});
-    solve({
-        2, 4, 2, 4, 0, 3, 3, 2, 1, 0, 2, 3,
-        1, 2, 4, 5, 4, 3, 1, 4, 4, 3, 5, 1});
-
+	solve({
+		2, 4, 2, 4, 0, 3, 3, 2, 1, 0, 2, 3,
+		1, 2, 4, 5, 4, 3, 1, 4, 4, 3, 5, 1});
 	solve({
 		7, 8, 9, 7, 7, 5, 3, 3, 3,
 		6, 4, 4, 7, 3, 3, 5, 3, 9,
@@ -187,6 +187,10 @@ void solve_input() {
 }
 
 int main() {
+	// solve({
+	// 	4, 5, 6, 9, 4, 0, 3, 8, 2, 2, 0, 8, 7, 9,
+	// 	4, 5, 1, 2, 7, 0, 2, 3, 0, 5, 9, 2, 4});
+	// solve_example();
 	solve_input();
 	return 0;
 }
