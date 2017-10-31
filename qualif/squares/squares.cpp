@@ -4,7 +4,6 @@
 #include <cassert>
 
 
-
 using Numbers = std::vector<uint64_t>;
 
 struct Digits {
@@ -16,27 +15,6 @@ Digits& operator+=(Digits& lhs, const Digits& rhs) {
 		lhs.v[i] += rhs.v[i];
 	}
 	return lhs;
-}
-
-bool operator<=(const Digits& lhs, const Digits& rhs) {
-	for (int i = 0; i < 10; ++i) {
-		if (lhs.v[i] > rhs.v[i]) {
-			return false;
-		}
-	}
-	return true;
-}
-
-bool operator>=(const Digits& lhs, const Digits& rhs) {
-	return rhs <= lhs;
-}
-
-bool operator<(const Digits& lhs, const Digits& rhs) {
-	return !(rhs <= lhs);
-}
-
-bool operator>(const Digits& lhs, const Digits& rhs) {
-	return !(lhs <= rhs);
 }
 
 std::ostream& operator<<(std::ostream& stream, const Digits& ds) {
@@ -101,6 +79,15 @@ Digits combined_digits(uint64_t n) {
 	return result;
 }
 
+bool accept(const Digits& provided, const Digits& required) {
+	for (int i = 0; i < 10; ++i) {
+		if (required.v[i] > provided.v[i]) {
+			return false;
+		}
+	}
+	return true;
+}
+
 void sieve(const Digits& ds, Numbers& vec, int width) {
 	Numbers result;
 	uint64_t mul = pow10(width - 1);
@@ -111,7 +98,7 @@ void sieve(const Digits& ds, Numbers& vec, int width) {
 			auto px = p + i * mul;
 			auto px_digits = digits(px, width);
 			px_digits += pow_digits(px, width);
-			if (px_digits <= ds) {
+			if (accept(ds, px_digits)) {
 				result.push_back(px);
 			}
 		}
@@ -119,7 +106,7 @@ void sieve(const Digits& ds, Numbers& vec, int width) {
 	vec.swap(result);
 }
 
-bool accept(const Digits& provided, const Digits& required) {
+bool accept_exact(const Digits& provided, const Digits& required) {
 	if (provided.v[0] < required.v[0]) {
 		return false;
 	}
@@ -140,7 +127,7 @@ uint64_t find_best(const Digits& ds, const Numbers& vec, int width) {
 			auto p = *it;
 			auto px = p + i * mul;
 			auto px_digits = combined_digits(px);
-			if (accept(ds, px_digits)) {
+			if (accept_exact(ds, px_digits)) {
 				return px;
 			}
 		}
