@@ -32,10 +32,9 @@ std::vector<std::size_t> choose(
 
 	std::vector<std::size_t> result;
 
-	if (static_cast<std::size_t>(
-					std::count(bookieLimits.begin(), bookieLimits.end(), 0)) ==
-			bookieLimits.size()) {
-		// If no bets can be placed, we can't bet
+	if (std::accumulate(
+				bookieLimits.begin(), bookieLimits.end(), 0u) < offers.size()) {
+		// not enough bookies available
 		return result;
 	}
 
