@@ -24,6 +24,9 @@ public:
 	Number& operator-=(const Number& rhs);
 
 	explicit operator double() const;
+	explicit operator bool() const;
+
+	Number reciprocal() const;
 
 	friend std::ostream& operator<<(std::ostream& os, const Number& n);
 	friend std::istream& operator>>(std::istream& is, Number& n);

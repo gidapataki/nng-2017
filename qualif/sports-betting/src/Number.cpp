@@ -52,6 +52,15 @@ Number::operator double() const {
 	return static_cast<double>(p) / static_cast<double>(q);
 }
 
+Number::operator bool() const {
+	return p != 0;
+}
+
+Number Number::reciprocal() const {
+	BOOST_ASSERT_MSG(p > 0, "Cannot invert 0");
+	return Number{static_cast<int>(q), p};
+}
+
 std::ostream& operator<<(std::ostream& os, const Number& n) {
 	if (n.q == 1) {
 		return os << n.p;
