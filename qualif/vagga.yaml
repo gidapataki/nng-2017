@@ -1,0 +1,18 @@
+containers:
+  build:
+    setup:
+      - !Ubuntu trusty
+      - !AptTrust keys: [1E9377A2BA9EF27F]
+      - !UbuntuPPA ubuntu-toolchain-r/test
+      - !Install [g++-6, boost1.54]
+
+commands:
+  point-hunting: !Command
+    description: "Compile point-hunting"
+    container: build
+    work-dir: /tmp
+    run: |
+        cp /work/point-hunting/main.cpp .
+        cp /work/point-hunting/sample.input .
+        g++-6 -O2 -std=c++14 main.cpp -o point-hunting
+        ./point-hunting < sample.input
