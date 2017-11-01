@@ -53,16 +53,6 @@ Digits digits(uint64_t n, int width) {
 	return result;
 }
 
-Digits pow_digits(uint64_t n, int width) {
-	Digits result;
-	auto value = (n * n);
-	while (width-- > 0) {
-		++result.v[value % 10];
-		value /= 10;
-	}
-	return result;
-}
-
 Digits combined_digits(uint64_t n) {
 	Digits result;
 	auto value = n * n;
@@ -95,11 +85,19 @@ void sieve(const Digits& ds, Numbers& vec, int width) {
 
 	for (auto p : vec) {
 		auto base_digits = digits(p, width - 1);
+
+		auto p2 = uint64_t(p) * p;
+		auto base_pow_digits = digits(p2, width - 1);
+		auto base_msd = p2 / mul % 10;
+		base_digits += base_pow_digits;
+
 		for (int i = 0; i < 10; ++i) {
 			auto px = p + i * mul;
 			auto px_digits = base_digits;
+			auto msd = (base_msd + 2 * i * p + (mul > 1 ? 0 : i*i)) % 10;
 			++px_digits.v[i];
-			px_digits += pow_digits(px, width);
+			++px_digits.v[msd];
+
 			if (accept(ds, px_digits)) {
 				out[i].push_back(px);
 			}
