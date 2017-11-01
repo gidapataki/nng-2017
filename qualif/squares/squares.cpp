@@ -89,22 +89,32 @@ bool accept(const Digits& provided, const Digits& required) {
 }
 
 void sieve(const Digits& ds, Numbers& vec, int width) {
-	Numbers out;
+	Numbers out[10];
 	auto mul = pow10(width - 1);
 
-	// Note: nesting is important here, so output becomes sorted.
-	for (int i = 0; i < 10; ++i) {
-		for (auto p : vec) {
+	for (auto p : vec) {
+		auto base_digits = digits(p, width - 1);
+		for (int i = 0; i < 10; ++i) {
 			auto px = p + i * mul;
-			auto px_digits = digits(px, width);
+			auto px_digits = base_digits;
+			++px_digits.v[i];
 			px_digits += pow_digits(px, width);
 			if (accept(ds, px_digits)) {
-				out.push_back(px);
+				out[i].push_back(px);
 			}
 		}
 	}
 
-	vec.swap(out);
+	vec.clear();
+	size_t s = 0;
+	for (int i = 0; i < 10; ++i) {
+		s += out[i].size();
+	}
+	vec.reserve(s);
+
+	for (int i = 0; i < 10; ++i) {
+		std::copy(out[i].begin(), out[i].end(), std::back_inserter(vec));
+	}
 }
 
 bool accept_exact(const Digits& provided, const Digits& required) {
