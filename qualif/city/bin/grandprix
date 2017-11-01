@@ -1,0 +1,5 @@
+#!/bin/bash
+set -e
+
+bin_dir=$(cd "$(dirname "$0")"; pwd)
+java -jar "${bin_dir}/grandprix_city.jar" "$@"
