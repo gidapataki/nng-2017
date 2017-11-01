@@ -26,7 +26,7 @@ std::ostream& operator<<(std::ostream& stream, const Digits& ds) {
 	return stream;
 }
 
-constexpr unsigned value[9] = {
+constexpr unsigned pow10_values[9] = {
 	1,           // 10^0
 	10,          // 10^1
 	100,         // 10^2
@@ -39,7 +39,7 @@ constexpr unsigned value[9] = {
 };
 
 constexpr unsigned pow10(int n) {
-	return value[n];
+	return pow10_values[n];
 }
 
 
