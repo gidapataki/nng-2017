@@ -25,15 +25,25 @@ Digits1& operator+=(Digits1& lhs, const Digits1& rhs) {
 }
 
 struct Digits2 {
-	uint64_t data[2] = {};
+	Digits2() {
+		data[0] = 0;
+		data[1] = 0;
+	}
+
+	union {
+		uint64_t data[2];
+		uint8_t digit[10];
+	};
 };
 
 uint8_t get_digit(const Digits2& ds, int index) {
-	return ds.data[index >> 3] >> ((index & 7) << 3);
+	return ds.digit[index];
+	// return ds.data[index >> 3] >> ((index & 7) << 3);
 }
 
 void inc_digit(Digits2& ds, int index) {
-	ds.data[index >> 3] += 1ull << ((index & 7) << 3);
+	++ds.digit[index];
+	// ds.data[index >> 3] += 1ull << ((index & 7) << 3);
 }
 
 Digits2& operator+=(Digits2& lhs, const Digits2& rhs) {
