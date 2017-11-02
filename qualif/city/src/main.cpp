@@ -67,6 +67,17 @@ Direction toDirection(int d) {
 	return Direction(d);
 }
 
+char toCommand(Direction dir) {
+	switch (dir) {
+		case Direction::kUp: return '^';
+		case Direction::kRight: return '>';
+		case Direction::kDown: return 'v';
+		case Direction::kLeft: return '<';
+		case Direction::kNone: return '-';
+	}
+	return '-';
+}
+
 Direction opposite(Direction dir) {
 	switch (dir) {
 		case Direction::kUp: return Direction::kDown;
@@ -125,6 +136,7 @@ class Grid {
 public:
 	void fromStream(std::istream& stream);
 	void showRoute(int start, int target);
+	void solve();
 
 private:
 	void createGraph();
@@ -249,21 +261,26 @@ void Grid::createRoute(int target) {
 			pipe.push_back(nb_pos);
 		});
 	}
+
+	for (auto& sp : start_pos_) {
+		auto dst = std::numeric_limits<int>::max();
+		auto next = Direction::kNone;
+		foreachNeighbor(sp, [&](const Position& nb_pos, Direction dir) {
+			auto nb_dst = getRoute(nb_pos, target).distance;
+			if (nb_dst < dst) {
+				next = dir;
+				dst = nb_dst;
+			}
+		});
+		getRoute(sp, target) = Route{dst, next};
+	}
 }
 
 void Grid::showRoute(int start, int target) {
 	auto sp = start_pos_[start];
-	auto dst = std::numeric_limits<int>::max();
-	auto next = Direction::kNone;
+	auto next = getRoute(sp, target).next;
 
 	std::cerr << sp << std::endl;
-	foreachNeighbor(sp, [&](const Position& nb_pos, Direction dir) {
-		auto nb_dst = getRoute(nb_pos, target).distance;
-		if (nb_dst < dst) {
-			next = dir;
-			dst = nb_dst;
-		}
-	});
 
 	std::vector<std::string> lines;
 	lines.resize(size_);
@@ -288,12 +305,30 @@ void Grid::showRoute(int start, int target) {
 	}
 }
 
+void Grid::solve() {
+	for (auto& cars : garage_) {
+		while (!cars.empty()) {
+			auto car = cars.front();
+			auto& pos = car.pos;
+			Direction next = Direction::kNone;
+
+			cars.pop_front();
+			while ((next = getRoute(pos, car.target).next) != Direction::kNone) {
+				std::cout << 1 << std::endl;
+				std::cout << car.index << " " << toCommand(next) << std::endl;
+				car.pos = neighbor(car.pos, next);
+			}
+		}
+	}
+	std::cout << 0 << std::endl;
+}
+
 
 // Main ////////////////////////////////////////////////////////////////////////
 
 int main() {
 	Grid g;
 	g.fromStream(std::cin);
-	g.showRoute(1, 8);
+	g.solve();
 	return 0;
 }
