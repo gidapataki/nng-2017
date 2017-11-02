@@ -4,23 +4,52 @@
 #include <cassert>
 
 
-using Numbers = std::vector<unsigned>;
 
-struct Digits {
+struct Digits1 {
 	uint8_t v[10] = {};
 };
 
-Digits& operator+=(Digits& lhs, const Digits& rhs) {
+uint8_t get_digit(const Digits1& ds, int index) {
+	return ds.v[index];
+}
+
+void inc_digit(Digits1& ds, int index) {
+	++ds.v[index];
+}
+
+Digits1& operator+=(Digits1& lhs, const Digits1& rhs) {
 	for (int i = 0; i < 10; ++i) {
 		lhs.v[i] += rhs.v[i];
 	}
 	return lhs;
 }
 
+struct Digits2 {
+	uint64_t data[2] = {};
+};
+
+uint8_t get_digit(const Digits2& ds, int index) {
+	return ds.data[index >> 3] >> ((index & 7) << 3);
+}
+
+void inc_digit(Digits2& ds, int index) {
+	ds.data[index >> 3] += 1ull << ((index & 7) << 3);
+}
+
+Digits2& operator+=(Digits2& lhs, const Digits2& rhs) {
+	lhs.data[0] += rhs.data[0];
+	lhs.data[1] += rhs.data[1];
+	return lhs;
+}
+
+using Digits = Digits2;
+using Numbers = std::vector<unsigned>;
+
+
 std::ostream& operator<<(std::ostream& stream, const Digits& ds) {
 	stream << "<Digits";
 	for (int i = 0; i < 10; ++i) {
-		stream << " " << int(ds.v[i]);
+		stream << " " << int(get_digit(ds, i));
 	}
 	stream << ">";
 	return stream;
@@ -42,12 +71,11 @@ constexpr unsigned pow10(int n) {
 	return pow10_values[n];
 }
 
-
 Digits digits(uint64_t n, int width) {
 	Digits result;
 	auto value = n;
 	while (width-- > 0) {
-		++result.v[value % 10];
+		inc_digit(result, value % 10);
 		value /= 10;
 	}
 	return result;
@@ -57,24 +85,39 @@ Digits combined_digits(uint64_t n) {
 	Digits result;
 	auto value = n * n;
 	while (value > 0) {
-		++result.v[value % 10];
+		inc_digit(result, value % 10);
 		value /= 10;
 	}
 
 	value = n;
 	while (value > 0) {
-		++result.v[value % 10];
+		inc_digit(result, value % 10);
 		value /= 10;
 	}
 
 	return result;
 }
 
-bool accept(const Digits& provided, const Digits& required) {
+bool accept(const Digits1& provided, const Digits1& required) {
 	for (int i = 0; i < 10; ++i) {
-		if (required.v[i] > provided.v[i]) {
+		if (get_digit(required, i) > get_digit(provided, i)) {
 			return false;
 		}
+	}
+	return true;
+}
+
+bool accept(const Digits2& provided, const Digits2& required) {
+	constexpr uint64_t mask = 0x8080808080808080ull;
+	uint64_t x0 = provided.data[0] | mask;
+	x0 -= required.data[0];
+	if ((x0 & mask) != mask) {
+		return false;
+	}
+	uint64_t x1 = provided.data[1] | mask;
+	x1 -= required.data[1];
+	if ((x1 & mask) != mask) {
+		return false;
 	}
 	return true;
 }
@@ -95,8 +138,8 @@ void sieve(const Digits& ds, Numbers& vec, int width) {
 			auto px = p + i * mul;
 			auto px_digits = base_digits;
 			auto msd = (base_msd + 2 * i * p + (mul > 1 ? 0 : i*i)) % 10;
-			++px_digits.v[i];
-			++px_digits.v[msd];
+			inc_digit(px_digits, i);
+			inc_digit(px_digits, msd);
 
 			if (accept(ds, px_digits)) {
 				out[i].push_back(px);
@@ -117,12 +160,12 @@ void sieve(const Digits& ds, Numbers& vec, int width) {
 }
 
 bool accept_exact(const Digits& provided, const Digits& required) {
-	if (provided.v[0] < required.v[0]) {
+	if (get_digit(provided, 0) < get_digit(required, 0)) {
 		return false;
 	}
 
 	for (int i = 1; i < 10; ++i) {
-		if (provided.v[i] != required.v[i]) {
+		if (get_digit(provided, i) != get_digit(required, i)) {
 			return false;
 		}
 	}
@@ -154,7 +197,7 @@ void solve(const std::vector<int>& digits) {
 
 	for (auto d : digits) {
 		assert(d >= 0 && d < 10);
-		++ds.v[d];
+		inc_digit(ds, d);
 	}
 
 	Numbers vec;
