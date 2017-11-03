@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <deque>
+#include <list>
 #include <cassert>
 #include <limits>
 #include <functional>
@@ -25,6 +26,13 @@ enum class Direction {
 	kNone,
 };
 
+enum class CarStatus {
+	kInGarage,
+	kDriving,
+	kArrived,
+};
+
+
 struct Position {
 	int row = 0;
 	int col = 0;
@@ -42,18 +50,11 @@ struct Cell {
 };
 
 struct Car {
-	Car() = default;
-	Car(int index, int target, int emission, const Position& pos)
-		: index(index)
-		, target(target)
-		, emission(emission)
-		, pos(pos)
-	{}
-
 	int index = -1;
 	int target = -1;
 	int emission = -1;
 	Position pos;
+	CarStatus status = CarStatus::kInGarage;
 };
 
 int fromDirection(Direction dir) {
@@ -110,6 +111,13 @@ std::ostream& operator<<(std::ostream& stream, const Car& car) {
 	return stream;
 }
 
+bool operator==(const Position& lhs, const Position& rhs) {
+	return lhs.row == rhs.row && lhs.col == rhs.col;
+}
+
+bool operator!=(const Position& lhs, const Position& rhs) {
+	return !(lhs == rhs);
+}
 
 CellType cellTypeFromChar(char ch) {
 	switch (ch) {
@@ -152,7 +160,8 @@ private:
 	std::vector<std::vector<Cell>> cells_;
 	std::vector<Position> start_pos_;
 	std::vector<Position> end_pos_;
-	std::vector<std::deque<Car>> garage_;
+	std::vector<Car> cars_;
+	std::vector<std::deque<Car*>> garages_;
 };
 
 
@@ -179,11 +188,13 @@ void Grid::fromStream(std::istream& stream) {
 
 	int k = 0;
 	stream >> k;
-	garage_.resize(start_pos_.size());
+	cars_.resize(k);
+	garages_.resize(start_pos_.size());
 	for (int i = 0; i < k; ++i) {
 		int g, w, e;
 		stream >> g >> w >> e;
-		garage_[g].push_back(Car(i, w, e, start_pos_[g]));
+		cars_[i] = Car{i, w, e, start_pos_[g], CarStatus::kInGarage};
+		garages_[g].push_back(&cars_[i]);
 	}
 
 	createGraph();
@@ -306,18 +317,47 @@ void Grid::showRoute(int start, int target) {
 }
 
 void Grid::solve() {
-	for (auto& cars : garage_) {
-		while (!cars.empty()) {
-			auto car = cars.front();
-			auto& pos = car.pos;
-			Direction next = Direction::kNone;
+	using Commands = std::vector<std::pair<int, Direction>>;
+	for (auto& garage : garages_) {
+		std::list<Car*> driving;
+		while (!garage.empty() || !driving.empty()) {
+			Commands cmds;
 
-			cars.pop_front();
-			while ((next = getRoute(pos, car.target).next) != Direction::kNone) {
-				std::cout << 1 << std::endl;
-				std::cout << car.index << " " << toCommand(next) << std::endl;
-				car.pos = neighbor(car.pos, next);
+			// prepare
+			for (auto* car : driving) {
+				auto next = getRoute(car->pos, car->target).next;
+				cmds.push_back({car->index, next});
 			}
+
+			if (!garage.empty()) {
+				auto* car = garage.front();
+				auto next = getRoute(car->pos, car->target).next;
+				driving.push_back(car);
+				garage.pop_front();
+				cmds.push_back({car->index, next});
+				car->status = CarStatus::kDriving;
+			}
+
+			// commit
+			std::cout << cmds.size() << std::endl;
+			for (auto& cmd : cmds) {
+				auto index = cmd.first;
+				auto next = cmd.second;
+				auto& car = cars_[index];
+
+				car.pos = neighbor(car.pos, next);
+				if (car.pos == end_pos_[car.target]) {
+					car.status = CarStatus::kArrived;
+				}
+				std::cout
+					<< index << " " << toCommand(next)
+					<< std::endl;
+			}
+
+			// cleanup
+			driving.remove_if([](Car* car) -> bool {
+				return (car->status == CarStatus::kArrived);
+			});
 		}
 	}
 	std::cout << 0 << std::endl;
