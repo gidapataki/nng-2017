@@ -48,6 +48,21 @@ Number& Number::operator-=(const Number& rhs) {
 	return *this;
 }
 
+Number& Number::operator*=(const Number& rhs) {
+	auto denominator = q*rhs.q;
+	auto numerator = p*rhs.p;
+	int commonFactor = gcd(std::abs(numerator), denominator);
+	p = numerator / commonFactor;
+	q = static_cast<unsigned>(denominator) / commonFactor;
+	return *this;
+}
+
+Number& Number::operator/=(const Number& rhs) {
+	auto inverse = rhs.reciprocal();
+	(*this)*=(inverse);
+	return *this;
+}
+
 Number::operator double() const {
 	return static_cast<double>(p) / static_cast<double>(q);
 }
@@ -59,6 +74,14 @@ Number::operator bool() const {
 Number Number::reciprocal() const {
 	BOOST_ASSERT_MSG(p > 0, "Cannot invert 0");
 	return Number{static_cast<int>(q), p};
+}
+
+int Number::getNumerator() const {
+	return p;
+}
+
+unsigned Number::getDenominator() const {
+	return q;
 }
 
 std::ostream& operator<<(std::ostream& os, const Number& n) {

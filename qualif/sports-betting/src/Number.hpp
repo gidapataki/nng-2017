@@ -5,7 +5,11 @@
 
 #include <boost/operators.hpp>
 
-class Number : boost::totally_ordered<Number>, boost::additive<Number> {
+class Number :
+		boost::totally_ordered<Number>,
+		boost::additive<Number>,
+		boost::multiplicative<Number>
+{
 public:
 	Number() = default;
 	Number(const Number&) = default;
@@ -22,11 +26,15 @@ public:
 
 	Number& operator+=(const Number& rhs);
 	Number& operator-=(const Number& rhs);
+	Number& operator*=(const Number& rhs);
+	Number& operator/=(const Number& rhs);
 
 	explicit operator double() const;
 	explicit operator bool() const;
 
 	Number reciprocal() const;
+	int getNumerator() const;
+	unsigned getDenominator() const;
 
 	friend std::ostream& operator<<(std::ostream& os, const Number& n);
 	friend std::istream& operator>>(std::istream& is, Number& n);

@@ -492,3 +492,7 @@ int Hungarian::cost() const { return m_cost; }
 const vector<vector<int>> &Hungarian::assignment() const {
     return m_assignment;
 }
+
+const vector<vector<int>> &Hungarian::cost_matrix() const {
+    return m_costmatrix;
+}

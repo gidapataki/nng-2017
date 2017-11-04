@@ -61,6 +61,9 @@ class Hungarian {
     /** Reference accessor for assignment **/
     const vector<vector<int>> &assignment() const;
 
+    /** Reference accessor for cost **/
+    const vector<vector<int>> &cost_matrix() const;
+
     /** Print the computed optimal assignment. **/
     void print_assignment();
 
