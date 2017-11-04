@@ -3,7 +3,9 @@
 #include <cctype>
 #include <array>
 #include <algorithm>
+#include <unordered_map>
 
+#include <boost/functional/hash.hpp>
 #include <boost/container/static_vector.hpp>
 
 using SingleBricks = boost::container::static_vector<int, 5>;
@@ -20,6 +22,14 @@ void Bricks::Normalize() {
     }
 }
 
+bool operator==(const Bricks& lhs, const Bricks& rhs) {
+    return lhs.bricks == rhs.bricks;
+}
+
+bool operator!=(const Bricks& lhs, const Bricks& rhs) {
+    return !(lhs == rhs);
+}
+
 std::ostream& operator<<(std::ostream& os, const Bricks& bricks) {
     for (int i = 0; i < bricks.bricks.size(); ++i) {
         for (auto c : bricks.bricks[i]) {
@@ -28,6 +38,26 @@ std::ostream& operator<<(std::ostream& os, const Bricks& bricks) {
     }
     return os;
 }
+
+namespace std {
+
+template<>
+struct hash<Bricks> {
+    typedef Bricks argument_type;
+    typedef std::size_t result_type;
+    result_type operator()(const Bricks& b) const {
+        std::size_t hash = 0;
+        for (auto& bricks : b.bricks) {
+            boost::hash_combine(hash, bricks.size());
+            for (auto count : bricks) {
+                boost::hash_combine(hash, count);
+            }
+        }
+        return hash;
+    }
+};
+
+} // namespace std
 
 std::uint64_t doTheThing(Bricks bricks) {
     bricks.Normalize();
