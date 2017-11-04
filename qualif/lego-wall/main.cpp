@@ -33,6 +33,17 @@ bool operator!=(const Bricks& lhs, const Bricks& rhs) {
     return !(lhs == rhs);
 }
 
+std::size_t hash_value(const Bricks& bricks) {
+    std::size_t hash = 0;
+    for (auto& bricks : bricks.bricks) {
+        boost::hash_combine(hash, bricks.size());
+        for (auto count : bricks) {
+            boost::hash_combine(hash, count);
+        }
+    }
+    return hash;
+}
+
 std::ostream& operator<<(std::ostream& os, const Bricks& bricks) {
     for (int i = 0; i < bricks.bricks.size(); ++i) {
         for (auto c : bricks.bricks[i]) {
@@ -44,31 +55,35 @@ std::ostream& operator<<(std::ostream& os, const Bricks& bricks) {
 
 namespace std {
 
+template<typename... Args>
+struct hash<std::tuple<Args...>> {
+    typedef std::tuple<Args...> argument_type;
+    typedef std::size_t result_type;
+
+    result_type operator()(const std::tuple<Args...>& t) const {
+        return boost::hash_value(t);
+    }
+};
+
 template<>
 struct hash<Bricks> {
     typedef Bricks argument_type;
     typedef std::size_t result_type;
     result_type operator()(const Bricks& b) const {
-        std::size_t hash = 0;
-        for (auto& bricks : b.bricks) {
-            boost::hash_combine(hash, bricks.size());
-            for (auto count : bricks) {
-                boost::hash_combine(hash, count);
-            }
-        }
-        return hash;
+        return hash_value(b);
     }
 };
 
 } // namespace std
 
-template<typename R, typename Arg>
-auto memoize(R (*f)(Arg arg)) {
-    std::unordered_map<Arg, R> table;
-    return [f, table](Arg arg) mutable {
-        auto it = table.find(arg);
+template<typename R, typename... Args>
+auto memoize(R (*f)(Args... arg)) {
+    std::unordered_map<std::tuple<Args...>, R> table;
+    return [f, table](Args... args) mutable {
+        auto key = std::make_tuple(args...);
+        auto it = table.find(key);
         if (it == end(table)) {
-            it = table.insert(std::make_pair(arg, f(arg))).first;
+            it = table.insert(std::make_pair(key, f(args...))).first;
         }
         return it->second;
     };
@@ -76,17 +91,17 @@ auto memoize(R (*f)(Arg arg)) {
 
 template<int H>
 struct EveryWall4 {
-    static std::uint64_t apply(Bricks bricks);
+    static std::uint64_t apply(Bricks bricks, bool ab, bool bc, bool cd);
 };
 
 template<>
 struct EveryWall4<0> {
-    static std::uint64_t apply(Bricks bricks) {
-        return 1;
+    static std::uint64_t apply(Bricks bricks, bool ab, bool bc, bool cd) {
+        return ab && bc && cd;
     }
 };
 
-static std::function<std::uint64_t(Bricks)> memoizedEveryWall4[] = {
+static std::function<std::uint64_t(Bricks, bool, bool, bool)> memoizedEveryWall4[] = {
     memoize(EveryWall4<0>::apply),
     memoize(EveryWall4<1>::apply),
     memoize(EveryWall4<2>::apply),
@@ -111,12 +126,12 @@ static std::function<std::uint64_t(Bricks)> memoizedEveryWall4[] = {
 };
 
 template<int H>
-std::uint64_t EveryWall4<H>::apply(Bricks bricks) {
-    return 2 * memoizedEveryWall4[H-1](bricks);
+std::uint64_t EveryWall4<H>::apply(Bricks bricks, bool ab, bool bc, bool cd) {
+    return 2 * memoizedEveryWall4[H-1](bricks, ab, bc, cd);
 }
 
 std::uint64_t doTheThing(int height, Bricks bricks) {
-    return memoizedEveryWall4[height](bricks);
+    return memoizedEveryWall4[height](bricks, false, false, false);
 }
 
 int main() {
