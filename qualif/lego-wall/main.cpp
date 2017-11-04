@@ -63,9 +63,9 @@ struct hash<Bricks> {
 } // namespace std
 
 template<typename R, typename Arg>
-auto memoize(R (*f)(const Arg& arg)) {
+auto memoize(R (*f)(Arg arg)) {
     std::unordered_map<Arg, R> table;
-    return [f, table](const Arg& arg) mutable {
+    return [f, table](Arg arg) mutable {
         auto it = table.find(arg);
         if (it == end(table)) {
             it = table.insert(std::make_pair(arg, f(arg))).first;
@@ -74,10 +74,49 @@ auto memoize(R (*f)(const Arg& arg)) {
     };
 }
 
-std::uint64_t doTheThing(Bricks bricks) {
-    bricks.Normalize();
-    std::cout << bricks << std::endl;
-    return 0;
+template<int H>
+struct EveryWall4 {
+    static std::uint64_t apply(Bricks bricks);
+};
+
+template<>
+struct EveryWall4<0> {
+    static std::uint64_t apply(Bricks bricks) {
+        return 1;
+    }
+};
+
+static std::function<std::uint64_t(Bricks)> memoizedEveryWall4[] = {
+    memoize(EveryWall4<0>::apply),
+    memoize(EveryWall4<1>::apply),
+    memoize(EveryWall4<2>::apply),
+    memoize(EveryWall4<3>::apply),
+    memoize(EveryWall4<4>::apply),
+    memoize(EveryWall4<5>::apply),
+    memoize(EveryWall4<6>::apply),
+    memoize(EveryWall4<7>::apply),
+    memoize(EveryWall4<8>::apply),
+    memoize(EveryWall4<9>::apply),
+    memoize(EveryWall4<10>::apply),
+    memoize(EveryWall4<11>::apply),
+    memoize(EveryWall4<12>::apply),
+    memoize(EveryWall4<13>::apply),
+    memoize(EveryWall4<14>::apply),
+    memoize(EveryWall4<15>::apply),
+    memoize(EveryWall4<16>::apply),
+    memoize(EveryWall4<17>::apply),
+    memoize(EveryWall4<18>::apply),
+    memoize(EveryWall4<19>::apply),
+    memoize(EveryWall4<20>::apply)
+};
+
+template<int H>
+std::uint64_t EveryWall4<H>::apply(Bricks bricks) {
+    return 2 * memoizedEveryWall4[H-1](bricks);
+}
+
+std::uint64_t doTheThing(int height, Bricks bricks) {
+    return memoizedEveryWall4[height](bricks);
 }
 
 int main() {
@@ -93,7 +132,7 @@ int main() {
             std::cin >> count >> length;
             bricks.bricks[length - 1].push_back(count);
         }
-        auto all_count = doTheThing(bricks);
+        auto all_count = doTheThing(height, bricks);
         std::cout << all_count << std::endl;
     }
 }
