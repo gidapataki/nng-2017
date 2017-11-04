@@ -48,6 +48,21 @@ void makeSquare(std::vector<std::vector<Number>>& offers) {
 	}
 }
 
+std::vector<std::vector<Number>> transpose(
+		const std::vector<std::vector<Number>>& m) {
+	std::vector<std::vector<Number>> result;
+
+	result.resize(m.size(), std::vector<Number>{m.size(), Number{}});
+
+	for (std::size_t i = 0; i < m.size(); ++i) {
+		for (std::size_t j = 0; j < m.size(); ++j) {
+			result[i][j] = m[j][i];
+		}
+	}
+
+	return result;
+}
+
 std::vector<std::vector<int>> normalize(
 		const std::vector<std::vector<Number>>& offers) {
 	std::vector<std::vector<int>> result;
@@ -71,7 +86,16 @@ Number solve(const std::vector<std::vector<Number>>& offers,
 		const std::vector<std::size_t>& bookieLimits) {
 	auto expandedOffers = expandBookies(offers, bookieLimits);
 	makeSquare(expandedOffers);
-	auto normalizedOffers = normalize(expandedOffers);
+	std::cerr << "Offers matrix" << std::endl;
+	// TODO: Check if we should _always_ transpose
+	auto normalizedOffers = normalize(transpose(expandedOffers));
+	for (const auto& row: normalizedOffers) {
+		for (const auto& offer: row) {
+			std::cerr << offer << " ";
+		}
+		std::cerr << std::endl;
+	}
+	std::cerr << std::endl;
 	auto rows = normalizedOffers.size();
 	auto columns = std::accumulate(bookieLimits.begin(), bookieLimits.end(), 0);
 	Hungarian problem{normalizedOffers,
@@ -100,11 +124,16 @@ Number solve(const std::vector<std::vector<Number>>& offers,
 	}
 	std::cerr << "}" << std::endl;
 
-	for (const auto& chosenOffer: chosenOffers) {
-		if (chosenOffer <= Number{}) {
+	auto zeroIt = std::find(chosenOffers.begin(), chosenOffers.end(), Number{});
+	if (zeroIt != chosenOffers.end()) {
+		// Check if it is far enough to the back to be considered a
+		// square-expanson zero
+		if (static_cast<std::size_t>(
+				std::distance(chosenOffers.begin(), zeroIt)) < offers.size()) {
 			return Number{};
 		}
 	}
+	chosenOffers.erase(zeroIt, chosenOffers.end());
 
 	auto wagers = chosenOffers | boost::adaptors::transformed(
 			std::mem_fn(&Number::reciprocal));
