@@ -19,6 +19,9 @@ struct Bricks {
 void Bricks::Normalize() {
     for (auto& b : bricks) {
         std::sort(b.begin(), b.end(), std::greater<int>{});
+        while (!b.empty() && b.back() == 0) {
+            b.pop_back();
+        }
     }
 }
 
