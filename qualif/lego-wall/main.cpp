@@ -62,6 +62,18 @@ struct hash<Bricks> {
 
 } // namespace std
 
+template<typename R, typename Arg>
+auto memoize(R (*f)(const Arg& arg)) {
+    std::unordered_map<Arg, R> table;
+    return [f, table](const Arg& arg) mutable {
+        auto it = table.find(arg);
+        if (it == end(table)) {
+            it = table.insert(std::make_pair(arg, f(arg))).first;
+        }
+        return it->second;
+    };
+}
+
 std::uint64_t doTheThing(Bricks bricks) {
     bricks.Normalize();
     std::cout << bricks << std::endl;
