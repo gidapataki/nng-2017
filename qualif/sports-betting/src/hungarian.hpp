@@ -269,7 +269,7 @@ inline bool Hungarian<Num>::assign_solution(const vector<Num> &row_dec,
 		const vector<Num> &col_inc,
 		const vector<int> &col_vertex) {
 	// End Hungarian algorithm 18
-	int i, j, k, l, m, n;
+	int i, k, l, m, n;
 
 	m = m_rows;
 	n = m_cols;
@@ -292,7 +292,7 @@ inline bool Hungarian<Num>::assign_solution(const vector<Num> &row_dec,
 	m_cost -= col_inc[i];
 	}
 	if (verbose)
-	fprintf(stderr, "Cost is %d\n", m_cost);
+		std::cerr << "Cost is " << m_cost << std::endl;
 
 	return true;
 }
@@ -408,7 +408,7 @@ template <typename Num> inline bool Hungarian<Num>::solve() {
 	checked = check_solution(row_dec, col_inc, col_vertex);
 	if (checked) {
 		// finish assignment, wrap up and done.
-		bool assign = assign_solution(row_dec, col_inc, col_vertex);
+		assign_solution(row_dec, col_inc, col_vertex);
 		return true;
 	} else {
 		if (verbose) {
@@ -425,7 +425,6 @@ template <typename Num> inline bool Hungarian<Num>::solve() {
 		fprintf(stderr, "Matched %d rows.\n", m - t);
 	}
 	q = 0;
-	bool try_matching;
 	while (1) {
 		while (q < t) {
 		// Begin explore node q of the forest 19
@@ -477,9 +476,10 @@ template <typename Num> inline bool Hungarian<Num>::solve() {
 			// Begin look at a new zero 22
 			k = slack_row[l];
 			if (verbose) {
-				fprintf(stderr, "Decreasing uncovered elements by "
-						"%d produces zero at [%d,%d]\n",
-					s, k, l);
+				std::cerr << "Decreasing uncovered elements by "
+						<< s << " produces zero at ["
+						<< k << "," << l << "]"
+						<< std::endl;
 			}
 			if (row_vertex[l] < 0) {
 				for (j = l + 1; j < n; j++)
@@ -529,7 +529,7 @@ template <typename Num> inline bool Hungarian<Num>::solve() {
 		checked = check_solution(row_dec, col_inc, col_vertex);
 		if (checked) {
 		// finish assignment, wrap up and done.
-		bool assign = assign_solution(row_dec, col_inc, col_vertex);
+		assign_solution(row_dec, col_inc, col_vertex);
 		return true;
 		} else {
 		if (verbose) {
