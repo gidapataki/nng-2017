@@ -98,7 +98,7 @@ Number solve(const std::vector<std::vector<Number>>& offers,
 	std::cerr << std::endl;
 	auto rows = normalizedOffers.size();
 	auto columns = std::accumulate(bookieLimits.begin(), bookieLimits.end(), 0);
-	Hungarian problem{normalizedOffers,
+	Hungarian<int> problem{normalizedOffers,
 			static_cast<int>(rows), static_cast<int>(columns),
 			HUNGARIAN_MODE_MAXIMIZE_UTIL};
 	problem.solve();

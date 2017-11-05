@@ -10,4 +10,4 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_executable(sports-betting-brute src/main.cpp src/Number.cpp src/solve.cpp)
-add_executable(sports-betting-hungarian src/main.cpp src/Number.cpp src/hungarian_solve.cpp src/hungarian.cpp)
+add_executable(sports-betting-hungarian src/main.cpp src/Number.cpp src/hungarian_solve.cpp)
