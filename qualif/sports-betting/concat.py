@@ -18,11 +18,11 @@ def resolve_include_line(line):
     pattern = get_local_include_regex()
     filename = re.match(pattern, line).group(1)
     with open(os.path.join('src', filename), 'r') as f:
-        return f.readlines()
+        return f.read().split('\n')
 
 def open_with_includes_resolved(filename):
     with open(filename, 'r') as f:
-        content = f.readlines()
+        content = f.read().split('\n')
         while True:
             lineno = find_local_include(content)
             if lineno is None:
@@ -39,7 +39,8 @@ def main():
     resolved = [open_with_includes_resolved(arg) for arg in args]
     for output in resolved:
         for line in output:
-            print(line)
+            if line:
+                print(line)
 
 if __name__ == '__main__':
     main()
