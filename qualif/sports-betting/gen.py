@@ -46,12 +46,8 @@ def generate_input(racers, bookies):
     # make sure the first values are strictly higher than the rest
     for i in range(racers):
         values[i] += Fraction(1, values[i].denominator)
-    # re-sorting is needed, (see 5/8 > 1/2 but 6/8 < 2/2)
+    # re-sorting is needed, (eg. 5/8 > 1/2 but 6/8 < 2/2)
     values.sort(reverse=True)
-
-    solution = 0
-    if total_slots >= racers:
-        solution = 1 / sum([1 / v for v in values[:racers]])
 
     bets = [[0] * bookies for _ in range(racers)]
 
@@ -62,7 +58,15 @@ def generate_input(racers, bookies):
         print(" ".join(map(str, racer_bets)))
 
     print(str.join(" ", [str(limit) for limit in bookie_limits]))
-    print("# solution = {}".format(solution))
+
+    if total_slots >= racers:
+        chosen_values = values[:racers]
+        solution = 1 / sum([1 / v for v in chosen_values])
+        print("# solution = {} ({})".format(
+            solution,
+            ", ".join(map(str, chosen_values))))
+    else:
+        print("# solution = 0")
 
 
 def main():
