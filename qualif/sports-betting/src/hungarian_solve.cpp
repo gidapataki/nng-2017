@@ -63,23 +63,6 @@ std::vector<std::vector<Number>> transpose(
 	return result;
 }
 
-std::vector<std::vector<int>> normalize(
-		const std::vector<std::vector<Number>>& offers) {
-	std::vector<std::vector<int>> result;
-	for (const auto& racerOffers: offers) {
-		std::vector<int> normalizedOffers;
-		for (const auto& offer: racerOffers) {
-			int lcm110 = 5*7*8*9; // lcm(1,...,10)
-			auto normalizedOffer = offer * Number{lcm110};
-			BOOST_ASSERT_MSG(normalizedOffer.getDenominator() == 1,
-					"Could not get rid of denominator");
-			normalizedOffers.push_back(normalizedOffer.getNumerator());
-		}
-		result.push_back(std::move(normalizedOffers));
-	}
-	return result;
-}
-
 } // unnamed namespace
 
 Number solve(const std::vector<std::vector<Number>>& offers,
@@ -88,7 +71,7 @@ Number solve(const std::vector<std::vector<Number>>& offers,
 	makeSquare(expandedOffers);
 	std::cerr << "Offers matrix" << std::endl;
 	// TODO: Check if we should _always_ transpose
-	auto normalizedOffers = normalize(transpose(expandedOffers));
+	auto normalizedOffers = transpose(expandedOffers);
 	for (const auto& row: normalizedOffers) {
 		for (const auto& offer: row) {
 			std::cerr << offer << " ";
@@ -98,7 +81,7 @@ Number solve(const std::vector<std::vector<Number>>& offers,
 	std::cerr << std::endl;
 	auto rows = normalizedOffers.size();
 	auto columns = std::accumulate(bookieLimits.begin(), bookieLimits.end(), 0);
-	Hungarian<int> problem{normalizedOffers,
+	Hungarian<Number> problem{normalizedOffers,
 			static_cast<int>(rows), static_cast<int>(columns),
 			HUNGARIAN_MODE_MAXIMIZE_UTIL};
 	problem.solve();

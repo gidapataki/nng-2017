@@ -77,16 +77,16 @@ template <typename Num> class Hungarian {
 
   protected:
     bool check_solution(const vector<Num> &row_dec, const vector<Num> &col_inc,
-                        const vector<Num> &col_vertex);
+                        const vector<int> &col_vertex);
     bool assign_solution(const vector<Num> &row_dec, const vector<Num> &col_inc,
-                         const vector<Num> &col_vertex);
+                         const vector<int> &col_vertex);
 
   private:
-    int m_cost;
+    Num m_cost;
     int m_rows;
     int m_cols;
     vector<vector<Num>> m_costmatrix;
-    vector<vector<Num>> m_assignment;
+    vector<vector<int>> m_assignment;
 };
 
 #define verbose (0)
@@ -96,16 +96,15 @@ template <typename Num> inline Hungarian<Num>::Hungarian() {
     m_rows = 1;
     m_cols = 1;
 
-    m_costmatrix.resize(m_rows, vector<int>(m_cols, 0));
-    m_assignment.resize(m_rows, vector<int>(m_cols, 0));
+    m_costmatrix.resize(m_rows, vector<Num>(m_cols, 0));
+    m_assignment.resize(m_rows, vector<Num>(m_cols, 0));
 }
 
 template <typename Num>
 inline Hungarian<Num>::Hungarian(const vector<vector<Num>> &input_matrix,
                                  int rows, int cols, MODE mode) {
     int i, j, org_cols, org_rows;
-    int max_cost;
-    max_cost = 0;
+    Num max_cost = Num{0};
 
     org_cols = cols;
     org_rows = rows;
@@ -121,13 +120,13 @@ inline Hungarian<Num>::Hungarian(const vector<vector<Num>> &input_matrix,
     m_rows = rows;
     m_cols = cols;
 
-    m_costmatrix.resize(rows, vector<int>(cols, 0));
+    m_costmatrix.resize(rows, vector<Num>(cols, Num{0}));
     m_assignment.resize(rows, vector<int>(cols, 0));
 
     for (i = 0; i < m_rows; i++) {
         for (j = 0; j < m_cols; j++) {
             m_costmatrix[i][j] =
-                (i < org_rows && j < org_cols) ? input_matrix[i][j] : 0;
+                (i < org_rows && j < org_cols) ? input_matrix[i][j] : Num{0};
             m_assignment[i][j] = 0;
 
             if (max_cost < m_costmatrix[i][j]) {
@@ -150,18 +149,19 @@ inline Hungarian<Num>::Hungarian(const vector<vector<Num>> &input_matrix,
                 __FUNCTION__);
 }
 
-inline void hungarian_print_matrix(const vector<vector<int>> &C, int rows,
+template <typename Num>
+inline void hungarian_print_matrix(const vector<vector<Num>> &C, int rows,
                                    int cols) {
     int i, j;
-    fprintf(stderr, "\n");
+    std::cerr << std::endl;
     for (i = 0; i < rows; i++) {
-        fprintf(stderr, " [");
+        std::cerr << " [";
         for (j = 0; j < cols; j++) {
-            fprintf(stderr, "%5d ", C[i][j]);
+            std::cerr << C[i][j] << "\t";
         }
-        fprintf(stderr, "]\n");
+        std::cerr << "]" << std::endl;;
     }
-    fprintf(stderr, "\n");
+    std::cerr << std::endl;
 }
 
 template <typename Num> inline void Hungarian<Num>::print_assignment() {
@@ -174,10 +174,10 @@ template <typename Num> inline void Hungarian<Num>::print_cost() {
 
 template <typename Num> inline void Hungarian<Num>::print_status() {
 
-    fprintf(stderr, "cost:\n");
+    std::cerr << "cost:" << std::endl;
     print_cost();
 
-    fprintf(stderr, "assignment:\n");
+    std::cerr << "assignment:" << std::endl;
     print_assignment();
 }
 
@@ -186,8 +186,7 @@ inline int Hungarian<Num>::init(const vector<vector<Num>> &input_matrix,
                                 int rows, int cols, MODE mode) {
 
     int i, j, org_cols, org_rows;
-    int max_cost;
-    max_cost = 0;
+    Num max_cost = Num{0};
 
     org_cols = cols;
     org_rows = rows;
@@ -200,14 +199,14 @@ inline int Hungarian<Num>::init(const vector<vector<Num>> &input_matrix,
     m_rows = rows;
     m_cols = cols;
 
-    m_costmatrix.resize(rows, vector<int>(cols, 0));
-    m_assignment.resize(rows, vector<int>(cols, 0));
+    m_costmatrix.resize(rows, vector<Num>(cols, Num{0}));
+    m_assignment.resize(rows, vector<Num>(cols, Num{0}));
 
     for (i = 0; i < m_rows; i++) {
         for (j = 0; j < m_cols; j++) {
             m_costmatrix[i][j] =
-                (i < org_rows && j < org_cols) ? input_matrix[i][j] : 0;
-            m_assignment[i][j] = 0;
+                (i < org_rows && j < org_cols) ? input_matrix[i][j] : Num{0};
+            m_assignment[i][j] = Num{0};
 
             if (max_cost < m_costmatrix[i][j])
                 max_cost = m_costmatrix[i][j];
@@ -233,7 +232,7 @@ inline int Hungarian<Num>::init(const vector<vector<Num>> &input_matrix,
 template <typename Num>
 inline bool Hungarian<Num>::check_solution(const vector<Num> &row_dec,
                                            const vector<Num> &col_inc,
-                                           const vector<Num> &col_vertex) {
+                                           const vector<int> &col_vertex) {
     int k, l, m, n;
 
     m = m_rows;
@@ -267,7 +266,7 @@ inline bool Hungarian<Num>::check_solution(const vector<Num> &row_dec,
 template <typename Num>
 inline bool Hungarian<Num>::assign_solution(const vector<Num> &row_dec,
                                             const vector<Num> &col_inc,
-                                            const vector<Num> &col_vertex) {
+                                            const vector<int> &col_vertex) {
     // End Hungarian algorithm 18
     int i, j, k, l, m, n;
 
@@ -298,31 +297,33 @@ inline bool Hungarian<Num>::assign_solution(const vector<Num> &row_dec,
 }
 
 template <typename Num> inline bool Hungarian<Num>::solve() {
-    int i, j, m, n, k, l, s, t, q, unmatched, cost;
+    int i, j, m, n, k, l, t, q, unmatched;
+    Num s;
 
     m = m_rows;
     n = m_cols;
 
-    int INF = std::numeric_limits<int>::max();
+    Num INF = Num{std::numeric_limits<int>::max()};
 
     // vertex alternating paths,
     vector<int> col_vertex(m), row_vertex(n), unchosen_row(m), parent_row(n),
-        row_dec(m), col_inc(n), slack_row(m), slack(n);
+        slack_row(m);
+    vector<Num> slack(n), row_dec(m), col_inc(n);
 
-    cost = 0;
+    Num cost = Num{0};
 
     for (i = 0; i < m_rows; i++) {
         col_vertex[i] = 0;
         unchosen_row[i] = 0;
-        row_dec[i] = 0;
+        row_dec[i] = Num{0};
         slack_row[i] = 0;
     }
 
     for (j = 0; j < m_cols; j++) {
         row_vertex[j] = 0;
         parent_row[j] = 0;
-        col_inc[j] = 0;
-        slack[j] = 0;
+        col_inc[j] = Num{0};
+        slack[j] = Num{0};
     }
 
     // Double check assignment matrix is 0
@@ -343,7 +344,7 @@ template <typename Num> inline bool Hungarian<Num>::solve() {
             cost += s;
         }
 
-        if (s != 0) {
+        if (s != Num{0}) {
             for (k = 0; k < m; k++) {
                 m_costmatrix[k][l] -= s;
             }
@@ -352,7 +353,7 @@ template <typename Num> inline bool Hungarian<Num>::solve() {
         // pre-initialize state 16
         row_vertex[l] = -1;
         parent_row[l] = -1;
-        col_inc[l] = 0;
+        col_inc[l] = Num{0};
         slack[l] = INF;
     }
     // End subtract column minima in order to start with lots of zeroes 12
@@ -432,14 +433,14 @@ template <typename Num> inline bool Hungarian<Num>::solve() {
                 s = row_dec[k];
                 for (l = 0; l < n; l++) {
                     if (slack[l]) {
-                        int del;
+                        Num del;
                         del = m_costmatrix[k][l] - s + col_inc[l];
                         if (del < slack[l]) {
-                            if (del == 0) {
+                            if (del == Num{0}) {
                                 if (row_vertex[l] < 0) {
                                     goto breakthru;
                                 }
-                                slack[l] = 0;
+                                slack[l] = Num{0};
                                 parent_row[l] = k;
                                 if (verbose)
                                     fprintf(stderr,
@@ -471,7 +472,7 @@ template <typename Num> inline bool Hungarian<Num>::solve() {
                 // check slack
                 if (slack[l]) {
                     slack[l] -= s;
-                    if (slack[l] == 0) {
+                    if (slack[l] == Num{0}) {
                         // Begin look at a new zero 22
                         k = slack_row[l];
                         if (verbose) {
@@ -481,7 +482,7 @@ template <typename Num> inline bool Hungarian<Num>::solve() {
                         }
                         if (row_vertex[l] < 0) {
                             for (j = l + 1; j < n; j++)
-                                if (slack[j] == 0) {
+                                if (slack[j] == Num{0}) {
                                     col_inc[j] += s;
                                 }
 
