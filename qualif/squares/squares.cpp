@@ -260,8 +260,8 @@ bool accept_exact(const Digits& provided, const Digits& required) {
 }
 
 uint64_t find_best(const Digits& ds, const Numbers& vec, int width) {
-	auto mul = pow10(width - 1);
-	for (int i = 10; i-- > 0;) {
+	auto mul = pow10(std::max(1, width - 1));
+	for (int i = 100; i-- > 0;) {
 		for (auto it = vec.rbegin(), ie = vec.rend(); it != ie; ++it) {
 			auto p = *it;
 			auto px = p + i * mul;
@@ -288,11 +288,11 @@ void solve(const std::vector<int>& digits) {
 
 	Numbers vec;
 	vec.push_back(0);
-	for (int i = 1; i < k; ++i) {
+	for (int i = 1; i < k - 1; ++i) {
 		sieve(ds, vec, i);
 	}
 
-	std::cout << find_best(ds, vec, k) << std::endl;
+	std::cout << find_best(ds, vec, k - 1) << std::endl;
 }
 
 void solve_example() {
