@@ -330,6 +330,7 @@ int main() {
 	// 	4, 5, 1, 2, 7, 0, 2, 3, 0, 5, 9, 2, 4});
 	// solve_example();
 	solve_input();
+
 #if DEBUG_MEMORY
         std::cerr << "MaxMem = " << g_MaxAllocatedSize / (1 << 20) << "MB" << std::endl;
 #endif // DEBUG MEMORY
