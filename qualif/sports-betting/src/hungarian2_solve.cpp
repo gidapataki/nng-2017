@@ -1,11 +1,13 @@
 #include "solve.hpp"
-#include "Hungarian.h"
+#include "Hungarian2.hpp"
 
 #include <boost/iterator/zip_iterator.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <algorithm>
 #include <iostream>
 #include <numeric>
+
+#include <boost/assert.hpp>
 
 namespace {
 
@@ -40,57 +42,29 @@ std::size_t totalBetsAvailable(const std::vector<std::size_t>& bookieLimits) {
 	return std::accumulate(bookieLimits.begin(), bookieLimits.end(), 0);
 }
 
-std::vector<std::vector<Number>> invert(
-		const std::vector<std::vector<Number>>& m) {
-	std::vector<std::vector<Number>> result;
-	result.reserve(m.size());
-
-	for (const auto& row: m) {
-		std::vector<Number> invertedRow;
-		invertedRow.reserve(row.size());
-		for (const auto& n: row) {
-			if (n) {
-				invertedRow.push_back(1ll/n);
-			} else {
-				invertedRow.push_back(Number{100000});
-			}
-		}
-		result.push_back(std::move(invertedRow));
-	}
-
-	return result;
-}
-
 } // unnamed namespace
 
 Number solve(const std::vector<std::vector<Number>>& offers,
 		const std::vector<std::size_t>& bookieLimits) {
-
 	if (totalBetsAvailable(bookieLimits) < offers.size()) {
 		// Cannot assign, not enough columns
 		return Number{0};
 	}
 
-	const auto expandedMatrix = expandMatrix(offers, bookieLimits);
-	auto invertedMatrix = invert(expandedMatrix);
-	HungarianAlgorithm solver;
-	std::vector<int> assignment;
-	auto naiveCost = solver.Solve(invertedMatrix, assignment);
-
-	std::vector<Number> chosenOdds;
-	chosenOdds.reserve(assignment.size());
-	for (std::size_t i = 0; i < assignment.size(); ++i) {
-		chosenOdds.push_back(expandedMatrix[i][assignment[i]]);
+	auto expandedMatrix = expandMatrix(offers, bookieLimits);
+	BOOST_ASSERT_MSG(expandedMatrix.size() <= expandedMatrix.front().size(),
+			"More racers than available bets");
+	while (expandedMatrix.size() < expandedMatrix.front().size()) {
+		expandedMatrix.push_back(std::vector<Number>(expandedMatrix.front().size(), Number{}));
 	}
 
-	if (std::find(chosenOdds.begin(), chosenOdds.end(), Number{0})
-			!= chosenOdds.end()) {
-		return Number{0};
+
+	std::cerr <<"foo" << std::endl;
+	Hungarian2<Number> problem{std::move(expandedMatrix)};
+	auto costs = problem.getCosts();
+	for (const auto& cost: costs) {
+		std::cerr << cost << std::endl;
 	}
 
-	if (naiveCost) {
-		return 1ll/naiveCost;
-	} else {
-		return Number{0};
-	}
+	return Number{0};
 }

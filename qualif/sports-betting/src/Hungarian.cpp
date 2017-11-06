@@ -121,7 +121,7 @@ void HungarianAlgorithm::assignmentoptimal(int *assignment, Number *cost, Number
 		/* Steps 1 and 2a */
 		for (row = 0; row<nOfRows; row++)
 			for (col = 0; col<nOfColumns; col++)
-				if (fabs(static_cast<double>(distMatrix[row + nOfRows*col])) < DBL_EPSILON)
+				if (fabs(boost::rational_cast<double>(distMatrix[row + nOfRows*col])) < DBL_EPSILON)
 					if (!coveredColumns[col])
 					{
 						starMatrix[row + nOfRows*col] = true;
@@ -156,7 +156,7 @@ void HungarianAlgorithm::assignmentoptimal(int *assignment, Number *cost, Number
 		/* Steps 1 and 2a */
 		for (col = 0; col<nOfColumns; col++)
 			for (row = 0; row<nOfRows; row++)
-				if (fabs(static_cast<double>(distMatrix[row + nOfRows*col])) < DBL_EPSILON)
+				if (fabs(boost::rational_cast<double>(distMatrix[row + nOfRows*col])) < DBL_EPSILON)
 					if (!coveredRows[row])
 					{
 						starMatrix[row + nOfRows*col] = true;
@@ -278,7 +278,7 @@ void HungarianAlgorithm::step3(int *assignment, Number *distMatrix, bool *starMa
 		for (col = 0; col<nOfColumns; col++)
 			if (!coveredColumns[col])
 				for (row = 0; row<nOfRows; row++)
-					if ((!coveredRows[row]) && (fabs(static_cast<double>(distMatrix[row + nOfRows*col])) < DBL_EPSILON))
+					if ((!coveredRows[row]) && (fabs(boost::rational_cast<double>(distMatrix[row + nOfRows*col])) < DBL_EPSILON))
 					{
 						/* prime zero */
 						primeMatrix[row + nOfRows*col] = true;

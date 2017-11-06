@@ -14,4 +14,4 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
 
-add_executable(sports-betting-hungarian3 src/main.cpp src/Number.cpp src/hungarian3_solve.cpp src/Hungarian.cpp)
+add_executable(sports-betting-hungarian3 src/main.cpp src/hungarian3_solve.cpp src/Hungarian.cpp)

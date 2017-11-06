@@ -4,6 +4,28 @@
 #include <iostream>
 #include <vector>
 
+std::istream& parseNumber(std::istream& is, Number& n) {
+	Number::int_type numerator;
+	is >> numerator;
+	if (is.good() && is.peek() == '/') {
+		is.get();
+		Number::int_type denominator;
+		is >> denominator;
+		n = Number{numerator, denominator};
+	} else {
+		n = Number{numerator};
+	}
+	return is;
+}
+
+std::ostream& printNumber(std::ostream& os, const Number& n) {
+	if (n.denominator() == Number::int_type{1}) {
+		return os << n.numerator();
+	} else {
+		return os << n.numerator() << '/' << n.denominator();
+	}
+}
+
 int main() {
 	std::size_t numberOfTests = 0;
 	std::cin >> numberOfTests;
@@ -17,7 +39,7 @@ int main() {
 			racerOffers.reserve(numberOfBookies);
 			for (std::size_t bookie = 0; bookie < numberOfBookies; ++bookie) {
 				Number offer;
-				std::cin >> offer;
+				parseNumber(std::cin, offer);
 				racerOffers.push_back(offer);
 			}
 			racerOfferses.push_back(std::move(racerOffers));
@@ -29,6 +51,7 @@ int main() {
 			std::cin >> bookieLimit;
 			bookieLimits.push_back(bookieLimit);
 		}
-		std::cout << solve(racerOfferses, bookieLimits) << std::endl;
+		printNumber(std::cout, solve(racerOfferses, bookieLimits));
+		std::cout << std::endl;
 	}
 }
