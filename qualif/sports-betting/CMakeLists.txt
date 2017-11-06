@@ -12,3 +12,4 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
 
 add_executable(sports-betting-brute src/main.cpp src/Number.cpp src/solve.cpp)
 add_executable(sports-betting-hungarian src/main.cpp src/Number.cpp src/hungarian_solve.cpp)
+add_executable(sports-betting-hungarian3 src/main.cpp src/Number.cpp src/hungarian3_solve.cpp src/Hungarian.cpp)
