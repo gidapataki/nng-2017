@@ -3,6 +3,8 @@
 #include <vector>
 #include <cassert>
 #include <algorithm>
+#include <unistd.h>
+#include <sys/wait.h>
 
 #if DEBUG_MEMORY
 
@@ -335,8 +337,42 @@ void solve_input() {
 		}
 	}
 
+	if (testcases.size() <= 20) {
+
+	std::vector<std::pair<int, int>> pipes;
+	std::vector<std::string> results;
 	for (auto& digits : testcases) {
-		solve(digits);
+		pipes.push_back(std::make_pair(-1, -1));
+		::pipe(&pipes.back().first);
+		::pid_t pid = fork();
+		if (pid == 0) {
+			::close(pipes.back().first);
+			::dup2(pipes.back().second, 1);
+			solve(digits);
+			std::exit(0);
+		} else {
+			::close(pipes.back().second);
+		}
+	}
+
+	::waitpid(-1, NULL, 0);
+	for (const auto& pipe: pipes) {
+		char buf;
+		std::string result;
+		while (::read(pipe.first, &buf, 1) > 0) {
+			result.push_back(buf);
+		}
+		results.push_back(std::move(result));
+	}
+
+	for (const auto& result: results) {
+		std::cout << result;
+	}
+
+	} else {
+		for (auto& digits: testcases) {
+			solve(digits);
+		}
 	}
 }
 
