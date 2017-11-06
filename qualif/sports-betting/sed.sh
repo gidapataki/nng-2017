@@ -32,7 +32,7 @@ $SED --in-place 's/true/T/g' src/Hungarian.cpp
 $SED --in-place '1s/^/auto T=true;\n/' src/Hungarian.cpp
 
 $SED --in-place 's/false/G/g' src/Hungarian.cpp
-$SED --in-place '1s/^/auto G=true;\n/' src/Hungarian.cpp
+$SED --in-place '1s/^/auto G=false;\n/' src/Hungarian.cpp
 
 $SED --in-place 's/std:://g' src/Hungarian.cpp src/hungarian3_solve.cpp
 $SED --in-place '1s/^/using namespace std;\n/' src/Hungarian.h
