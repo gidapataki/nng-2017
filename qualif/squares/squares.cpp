@@ -320,16 +320,22 @@ void solve_example() {
 
 void solve_input() {
 	int t;
+	std::vector<std::vector<int>> testcases;
+
 	std::cin >> t;
+	testcases.resize(t);
 	for (int i = 0; i < t; ++i) {
 		int n;
 		std::cin >> n;
-		std::vector<int> digits;
+		auto& digits = testcases[i];
 		for (int j = 0; j < n; ++j) {
 			int d;
 			std::cin >> d;
 			digits.push_back(d);
 		}
+	}
+
+	for (auto& digits : testcases) {
 		solve(digits);
 	}
 }
