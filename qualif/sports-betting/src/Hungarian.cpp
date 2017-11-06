@@ -176,7 +176,7 @@ void HungarianAlgorithm::assignmentoptimal(int *assignment, Number *cost, Number
 	computeassignmentcost(assignment, cost, distMatrixIn, nOfRows);
 
 	/* free allocated memory */
-	free(distMatrix);
+	delete[] distMatrix;
 	free(coveredColumns);
 	free(coveredRows);
 	free(starMatrix);
