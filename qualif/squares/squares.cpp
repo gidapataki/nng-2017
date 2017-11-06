@@ -288,7 +288,11 @@ void solve(const std::vector<int>& digits) {
 
 	Numbers vec;
 	int w = digits.size() / 3;
-	int s = w;
+
+	// Note:
+	//  s = w      - sieve all digits (final vec will be larger)
+	//  s = w-1    - sieve less (find_best() will iterate more)
+	int s = (w <= 6 ? w - 1 : w);
 
 	vec.push_back(0);
 	for (int i = 1; i < s; ++i) {
