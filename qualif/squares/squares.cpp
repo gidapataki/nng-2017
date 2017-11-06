@@ -288,7 +288,7 @@ void solve(const std::vector<int>& digits) {
 
 	Numbers vec;
 	int w = digits.size() / 3;
-	int s = w - (w > 5 ? 1 : 0);
+	int s = w;
 
 	vec.push_back(0);
 	for (int i = 1; i < s; ++i) {
