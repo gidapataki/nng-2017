@@ -260,10 +260,9 @@ bool accept_exact(const Digits& provided, const Digits& required) {
 	return true;
 }
 
-uint64_t find_best(const Digits& ds, const Numbers& vec, int width, int shift) {
-	// std::cerr << vec.size() << std::endl;
-	auto mul = pow10(std::max(0, width - 1));
-	for (int i = pow10(shift + 1); i-- > 0;) {
+uint64_t find_best(const Digits& ds, const Numbers& vec, int sieved, int width) {
+	auto mul = pow10(std::max(0, sieved - 1));
+	for (int i = pow10(width - sieved + 1); i-- > 0;) {
 		for (auto it = vec.rbegin(), ie = vec.rend(); it != ie; ++it) {
 			auto p = *it;
 			auto px = p + i * mul;
@@ -281,7 +280,6 @@ void solve(const std::vector<int>& digits) {
 	assert(digits.size() % 3 == 0);
 
 	Digits ds;
-	int k = digits.size() / 3;
 
 	for (auto d : digits) {
 		assert(d >= 0 && d < 10);
@@ -289,13 +287,16 @@ void solve(const std::vector<int>& digits) {
 	}
 
 	Numbers vec;
-	int shift = 1;
+	int w = digits.size() / 3;
+	int s = w - (w > 5 ? 1 : 0);
+
 	vec.push_back(0);
-	for (int i = 1; i < k - shift; ++i) {
+	for (int i = 1; i < s; ++i) {
 		sieve(ds, vec, i);
 	}
 
-	std::cout << find_best(ds, vec, k - shift, shift) << std::endl;
+
+	std::cout << find_best(ds, vec, s, w) << std::endl;
 }
 
 void solve_example() {
