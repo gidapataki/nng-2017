@@ -4,7 +4,6 @@
 #include <boost/iterator/zip_iterator.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <algorithm>
-#include <iostream>
 #include <numeric>
 
 namespace {

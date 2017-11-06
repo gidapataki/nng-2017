@@ -78,7 +78,7 @@ void HungarianAlgorithm::assignmentoptimal(int *assignment, Number *cost, Number
 	{
 		value = distMatrixIn[row];
 		if (value < Number{0})
-			cerr << "All matrix elements have to be non-negative." << endl;
+			cerr << "ERROR" << endl;
 		distMatrix[row] = value;
 	}
 
