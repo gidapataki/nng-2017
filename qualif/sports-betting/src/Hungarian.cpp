@@ -3,7 +3,7 @@
 // 
 // This is a C++ wrapper with slight modification of a hungarian algorithm implementation by Markus Buehren.
 // The original implementation is a few mex-functions for use in MATLAB, found here:
-// http://www.mathworks.com/matlabcentral/fileexchange/6543-functions-for-the-rectangular-ass-problem
+// http://www.mathworks.com/matlabcentral/fileexchange/6543-functions-for-the-rectangular-assignment-problem
 // 
 // Both this code and the orignal code are published under the BSD license.
 // by Cong Ma, 2016
@@ -22,247 +22,251 @@ HungarianAlgorithm::~HungarianAlgorithm(){}
 using namespace std;
 
 //********************************************************//
-// A single function wrapper for solving ass problem.
+// A single function wrapper for solving assignment problem.
 //********************************************************//
 Number HungarianAlgorithm::Solve(vector <vector<Number> >& DistMatrix, vector<int>& Assignment)
 {
 	unsigned int nRows = DistMatrix.size();
 	unsigned int nCols = DistMatrix[0].size();
 
-	Number *dMIn = new Number[nRows * nCols];
-	int *ass = new int[nRows];
+	Number *distMatrixIn = new Number[nRows * nCols];
+	int *assignment = new int[nRows];
 	Number cost = Number{0};
 
-	// Fill in the dMIn. Mind the index is "i + nRows * j".
+	// Fill in the distMatrixIn. Mind the index is "i + nRows * j".
 	// Here the cost matrix of size MxN is defined as a double precision array of N*M elements. 
 	// In the solving functions matrices are seen to be saved MATLAB-internally in row-order.
 	// (i.e. the matrix [1 2; 3 4] will be stored as a vector [1 3 2 4], NOT [1 2 3 4]).
 	for (unsigned int i = 0; i < nRows; i++)
 		for (unsigned int j = 0; j < nCols; j++)
-			dMIn[i + nRows * j] = DistMatrix[i][j];
+			distMatrixIn[i + nRows * j] = DistMatrix[i][j];
 	
 	// call solving function
-	assoptimal(ass, &cost, dMIn, nRows, nCols);
+	assignmentoptimal(assignment, &cost, distMatrixIn, nRows, nCols);
 
 	Assignment.clear();
 	for (unsigned int r = 0; r < nRows; r++)
-		Assignment.push_back(ass[r]);
+		Assignment.push_back(assignment[r]);
 
-	delete[] dMIn;
-	delete[] ass;
+	delete[] distMatrixIn;
+	delete[] assignment;
 	return cost;
 }
 
 
 //********************************************************//
-// Solve optimal solution for ass problem using Munkres algorithm, also known as Hungarian Algorithm.
+// Solve optimal solution for assignment problem using Munkres algorithm, also known as Hungarian Algorithm.
 //********************************************************//
-void HungarianAlgorithm::assoptimal(int *ass, Number *cost, Number *dMIn, int nRs, int nCs)
+void HungarianAlgorithm::assignmentoptimal(int *assignment, Number *cost, Number *distMatrixIn, int nOfRows, int nOfColumns)
 {
-	Number *dM, *dMTemp, *dMEnd, *columnEnd, value, minValue;
-	bool *cCs, *cRs, *sM, *nSM, *pM;
-	int nOfElements, mD, row, col;
+	Number *distMatrix, *distMatrixTemp, *distMatrixEnd, *columnEnd, value, minValue;
+	bool *coveredColumns, *coveredRows, *starMatrix, *newStarMatrix, *primeMatrix;
+	int nOfElements, minDim, row, col;
 
 	/* initialization */
 	*cost = Number{0};
-	for (row = 0; row<nRs; row++)
-		ass[row] = -1;
+	for (row = 0; row<nOfRows; row++)
+		assignment[row] = -1;
 
 	/* generate working copy of distance Matrix */
 	/* check if all matrix elements are positive */
-	nOfElements = nRs * nCs;
-	dM = new Number[nOfElements];
-	dMEnd = dM + nOfElements;
+	nOfElements = nOfRows * nOfColumns;
+	distMatrix = new Number[nOfElements];
+	distMatrixEnd = distMatrix + nOfElements;
 
 	for (row = 0; row<nOfElements; row++)
 	{
-		value = dMIn[row];
+		value = distMatrixIn[row];
 		if (value < Number{0})
 			cerr << "All matrix elements have to be non-negative." << endl;
-		dM[row] = value;
+		distMatrix[row] = value;
 	}
 
 
 	/* memory allocation */
-	cCs = (bool *)calloc(nCs, sizeof(bool));
-	cRs = (bool *)calloc(nRs, sizeof(bool));
-	sM = (bool *)calloc(nOfElements, sizeof(bool));
-	pM = (bool *)calloc(nOfElements, sizeof(bool));
-	nSM = (bool *)calloc(nOfElements, sizeof(bool)); /* used in step4 */
+	coveredColumns = (bool *)calloc(nOfColumns, sizeof(bool));
+	coveredRows = (bool *)calloc(nOfRows, sizeof(bool));
+	starMatrix = (bool *)calloc(nOfElements, sizeof(bool));
+	primeMatrix = (bool *)calloc(nOfElements, sizeof(bool));
+	newStarMatrix = (bool *)calloc(nOfElements, sizeof(bool)); /* used in step4 */
 
 	/* preliminary steps */
-	if (nRs <= nCs)
+	if (nOfRows <= nOfColumns)
 	{
-		mD = nRs;
+		minDim = nOfRows;
 
-		for (row = 0; row<nRs; row++)
+		for (row = 0; row<nOfRows; row++)
 		{
 			/* find the smallest element in the row */
-			dMTemp = dM + row;
-			minValue = *dMTemp;
-			dMTemp += nRs;
-			while (dMTemp < dMEnd)
+			distMatrixTemp = distMatrix + row;
+			minValue = *distMatrixTemp;
+			distMatrixTemp += nOfRows;
+			while (distMatrixTemp < distMatrixEnd)
 			{
-				value = *dMTemp;
+				value = *distMatrixTemp;
 				if (value < minValue)
 					minValue = value;
-				dMTemp += nRs;
+				distMatrixTemp += nOfRows;
 			}
 
 			/* subtract the smallest element from each element of the row */
-			dMTemp = dM + row;
-			while (dMTemp < dMEnd)
+			distMatrixTemp = distMatrix + row;
+			while (distMatrixTemp < distMatrixEnd)
 			{
-				*dMTemp -= minValue;
-				dMTemp += nRs;
+				*distMatrixTemp -= minValue;
+				distMatrixTemp += nOfRows;
 			}
 		}
 
 		/* Steps 1 and 2a */
-		for (row = 0; row<nRs; row++)
-			for (col = 0; col<nCs; col++)
-				if (fabs(static_cast<double>(dM[row + nRs*col])) < DBL_EPSILON)
-					if (!cCs[col])
+		for (row = 0; row<nOfRows; row++)
+			for (col = 0; col<nOfColumns; col++)
+				if (fabs(static_cast<double>(distMatrix[row + nOfRows*col])) < DBL_EPSILON)
+					if (!coveredColumns[col])
 					{
-						sM[row + nRs*col] = true;
-						cCs[col] = true;
+						starMatrix[row + nOfRows*col] = true;
+						coveredColumns[col] = true;
 						break;
 					}
 	}
-	else /* if(nRs > nCs) */
+	else /* if(nOfRows > nOfColumns) */
 	{
-		mD = nCs;
+		minDim = nOfColumns;
 
-		for (col = 0; col<nCs; col++)
+		for (col = 0; col<nOfColumns; col++)
 		{
 			/* find the smallest element in the column */
-			dMTemp = dM + nRs*col;
-			columnEnd = dMTemp + nRs;
+			distMatrixTemp = distMatrix + nOfRows*col;
+			columnEnd = distMatrixTemp + nOfRows;
 
-			minValue = *dMTemp++;
-			while (dMTemp < columnEnd)
+			minValue = *distMatrixTemp++;
+			while (distMatrixTemp < columnEnd)
 			{
-				value = *dMTemp++;
+				value = *distMatrixTemp++;
 				if (value < minValue)
 					minValue = value;
 			}
 
 			/* subtract the smallest element from each element of the column */
-			dMTemp = dM + nRs*col;
-			while (dMTemp < columnEnd)
-				*dMTemp++ -= minValue;
+			distMatrixTemp = distMatrix + nOfRows*col;
+			while (distMatrixTemp < columnEnd)
+				*distMatrixTemp++ -= minValue;
 		}
 
 		/* Steps 1 and 2a */
-		for (col = 0; col<nCs; col++)
-			for (row = 0; row<nRs; row++)
-				if (fabs(static_cast<double>(dM[row + nRs*col])) < DBL_EPSILON)
-					if (!cRs[row])
+		for (col = 0; col<nOfColumns; col++)
+			for (row = 0; row<nOfRows; row++)
+				if (fabs(static_cast<double>(distMatrix[row + nOfRows*col])) < DBL_EPSILON)
+					if (!coveredRows[row])
 					{
-						sM[row + nRs*col] = true;
-						cCs[col] = true;
-						cRs[row] = true;
+						starMatrix[row + nOfRows*col] = true;
+						coveredColumns[col] = true;
+						coveredRows[row] = true;
 						break;
 					}
-		for (row = 0; row<nRs; row++)
-			cRs[row] = false;
+		for (row = 0; row<nOfRows; row++)
+			coveredRows[row] = false;
 
 	}
 
 	/* move to step 2b */
-	step2b(ass, dM, sM, nSM, pM, cCs, cRs, nRs, nCs, mD);
+	step2b(assignment, distMatrix, starMatrix, newStarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim);
 
-	/* compute cost and remove invalid asss */
-	computeasscost(ass, cost, dMIn, nRs);
+	/* compute cost and remove invalid assignments */
+	computeassignmentcost(assignment, cost, distMatrixIn, nOfRows);
 
 	/* free allocated memory */
-	free(dM);
-	free(cCs);
-	free(cRs);
-	free(sM);
-	free(pM);
-	free(nSM);
+	free(distMatrix);
+	free(coveredColumns);
+	free(coveredRows);
+	free(starMatrix);
+	free(primeMatrix);
+	free(newStarMatrix);
 
 	return;
 }
 
 /********************************************************/
-void HungarianAlgorithm::buildassvector(int *ass, bool *sM, int nRs, int nCs)
+void HungarianAlgorithm::buildassignmentvector(int *assignment, bool *starMatrix, int nOfRows, int nOfColumns)
 {
 	int row, col;
 
-	for (row = 0; row<nRs; row++)
-		for (col = 0; col<nCs; col++)
-			if (sM[row + nRs*col])
+	for (row = 0; row<nOfRows; row++)
+		for (col = 0; col<nOfColumns; col++)
+			if (starMatrix[row + nOfRows*col])
 			{
-				ass[row] = col;
+#ifdef ONE_INDEXING
+				assignment[row] = col + 1; /* MATLAB-Indexing */
+#else
+				assignment[row] = col;
+#endif
 				break;
 			}
 }
 
 /********************************************************/
-void HungarianAlgorithm::computeasscost(int *ass, Number *cost, Number *dM, int nRs)
+void HungarianAlgorithm::computeassignmentcost(int *assignment, Number *cost, Number *distMatrix, int nOfRows)
 {
 	int row, col;
 
-	for (row = 0; row<nRs; row++)
+	for (row = 0; row<nOfRows; row++)
 	{
-		col = ass[row];
+		col = assignment[row];
 		if (col >= 0)
-			*cost += dM[row + nRs*col];
+			*cost += distMatrix[row + nOfRows*col];
 	}
 }
 
 /********************************************************/
-void HungarianAlgorithm::step2a(int *ass, Number *dM, bool *sM, bool *nSM, bool *pM, bool *cCs, bool *cRs, int nRs, int nCs, int mD)
+void HungarianAlgorithm::step2a(int *assignment, Number *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim)
 {
-	bool *sMTemp, *columnEnd;
+	bool *starMatrixTemp, *columnEnd;
 	int col;
 
 	/* cover every column containing a starred zero */
-	for (col = 0; col<nCs; col++)
+	for (col = 0; col<nOfColumns; col++)
 	{
-		sMTemp = sM + nRs*col;
-		columnEnd = sMTemp + nRs;
-		while (sMTemp < columnEnd){
-			if (*sMTemp++)
+		starMatrixTemp = starMatrix + nOfRows*col;
+		columnEnd = starMatrixTemp + nOfRows;
+		while (starMatrixTemp < columnEnd){
+			if (*starMatrixTemp++)
 			{
-				cCs[col] = true;
+				coveredColumns[col] = true;
 				break;
 			}
 		}
 	}
 
 	/* move to step 3 */
-	step2b(ass, dM, sM, nSM, pM, cCs, cRs, nRs, nCs, mD);
+	step2b(assignment, distMatrix, starMatrix, newStarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim);
 }
 
 /********************************************************/
-void HungarianAlgorithm::step2b(int *ass, Number *dM, bool *sM, bool *nSM, bool *pM, bool *cCs, bool *cRs, int nRs, int nCs, int mD)
+void HungarianAlgorithm::step2b(int *assignment, Number *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim)
 {
-	int col, nCC;
+	int col, nOfCoveredColumns;
 
 	/* count covered columns */
-	nCC = 0;
-	for (col = 0; col<nCs; col++)
-		if (cCs[col])
-			nCC++;
+	nOfCoveredColumns = 0;
+	for (col = 0; col<nOfColumns; col++)
+		if (coveredColumns[col])
+			nOfCoveredColumns++;
 
-	if (nCC == mD)
+	if (nOfCoveredColumns == minDim)
 	{
 		/* algorithm finished */
-		buildassvector(ass, sM, nRs, nCs);
+		buildassignmentvector(assignment, starMatrix, nOfRows, nOfColumns);
 	}
 	else
 	{
 		/* move to step 3 */
-		step3(ass, dM, sM, nSM, pM, cCs, cRs, nRs, nCs, mD);
+		step3(assignment, distMatrix, starMatrix, newStarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim);
 	}
 
 }
 
 /********************************************************/
-void HungarianAlgorithm::step3(int *ass, Number *dM, bool *sM, bool *nSM, bool *pM, bool *cCs, bool *cRs, int nRs, int nCs, int mD)
+void HungarianAlgorithm::step3(int *assignment, Number *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim)
 {
 	bool zerosFound;
 	int row, col, starCol;
@@ -271,29 +275,29 @@ void HungarianAlgorithm::step3(int *ass, Number *dM, bool *sM, bool *nSM, bool *
 	while (zerosFound)
 	{
 		zerosFound = false;
-		for (col = 0; col<nCs; col++)
-			if (!cCs[col])
-				for (row = 0; row<nRs; row++)
-					if ((!cRs[row]) && (fabs(static_cast<double>(dM[row + nRs*col])) < DBL_EPSILON))
+		for (col = 0; col<nOfColumns; col++)
+			if (!coveredColumns[col])
+				for (row = 0; row<nOfRows; row++)
+					if ((!coveredRows[row]) && (fabs(static_cast<double>(distMatrix[row + nOfRows*col])) < DBL_EPSILON))
 					{
 						/* prime zero */
-						pM[row + nRs*col] = true;
+						primeMatrix[row + nOfRows*col] = true;
 
 						/* find starred zero in current row */
-						for (starCol = 0; starCol<nCs; starCol++)
-							if (sM[row + nRs*starCol])
+						for (starCol = 0; starCol<nOfColumns; starCol++)
+							if (starMatrix[row + nOfRows*starCol])
 								break;
 
-						if (starCol == nCs) /* no starred zero found */
+						if (starCol == nOfColumns) /* no starred zero found */
 						{
 							/* move to step 4 */
-							step4(ass, dM, sM, nSM, pM, cCs, cRs, nRs, nCs, mD, row, col);
+							step4(assignment, distMatrix, starMatrix, newStarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim, row, col);
 							return;
 						}
 						else
 						{
-							cRs[row] = true;
-							cCs[starCol] = false;
+							coveredRows[row] = true;
+							coveredColumns[starCol] = false;
 							zerosFound = true;
 							break;
 						}
@@ -301,93 +305,93 @@ void HungarianAlgorithm::step3(int *ass, Number *dM, bool *sM, bool *nSM, bool *
 	}
 
 	/* move to step 5 */
-	step5(ass, dM, sM, nSM, pM, cCs, cRs, nRs, nCs, mD);
+	step5(assignment, distMatrix, starMatrix, newStarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim);
 }
 
 /********************************************************/
-void HungarianAlgorithm::step4(int *ass, Number *dM, bool *sM, bool *nSM, bool *pM, bool *cCs, bool *cRs, int nRs, int nCs, int mD, int row, int col)
+void HungarianAlgorithm::step4(int *assignment, Number *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim, int row, int col)
 {
 	int n, starRow, starCol, primeRow, primeCol;
-	int nOfElements = nRs*nCs;
+	int nOfElements = nOfRows*nOfColumns;
 
-	/* generate temporary copy of sM */
+	/* generate temporary copy of starMatrix */
 	for (n = 0; n<nOfElements; n++)
-		nSM[n] = sM[n];
+		newStarMatrix[n] = starMatrix[n];
 
 	/* star current zero */
-	nSM[row + nRs*col] = true;
+	newStarMatrix[row + nOfRows*col] = true;
 
 	/* find starred zero in current column */
 	starCol = col;
-	for (starRow = 0; starRow<nRs; starRow++)
-		if (sM[starRow + nRs*starCol])
+	for (starRow = 0; starRow<nOfRows; starRow++)
+		if (starMatrix[starRow + nOfRows*starCol])
 			break;
 
-	while (starRow<nRs)
+	while (starRow<nOfRows)
 	{
 		/* unstar the starred zero */
-		nSM[starRow + nRs*starCol] = false;
+		newStarMatrix[starRow + nOfRows*starCol] = false;
 
 		/* find primed zero in current row */
 		primeRow = starRow;
-		for (primeCol = 0; primeCol<nCs; primeCol++)
-			if (pM[primeRow + nRs*primeCol])
+		for (primeCol = 0; primeCol<nOfColumns; primeCol++)
+			if (primeMatrix[primeRow + nOfRows*primeCol])
 				break;
 
 		/* star the primed zero */
-		nSM[primeRow + nRs*primeCol] = true;
+		newStarMatrix[primeRow + nOfRows*primeCol] = true;
 
 		/* find starred zero in current column */
 		starCol = primeCol;
-		for (starRow = 0; starRow<nRs; starRow++)
-			if (sM[starRow + nRs*starCol])
+		for (starRow = 0; starRow<nOfRows; starRow++)
+			if (starMatrix[starRow + nOfRows*starCol])
 				break;
 	}
 
-	/* use temporary copy as new sM */
+	/* use temporary copy as new starMatrix */
 	/* delete all primes, uncover all rows */
 	for (n = 0; n<nOfElements; n++)
 	{
-		pM[n] = false;
-		sM[n] = nSM[n];
+		primeMatrix[n] = false;
+		starMatrix[n] = newStarMatrix[n];
 	}
-	for (n = 0; n<nRs; n++)
-		cRs[n] = false;
+	for (n = 0; n<nOfRows; n++)
+		coveredRows[n] = false;
 
 	/* move to step 2a */
-	step2a(ass, dM, sM, nSM, pM, cCs, cRs, nRs, nCs, mD);
+	step2a(assignment, distMatrix, starMatrix, newStarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim);
 }
 
 /********************************************************/
-void HungarianAlgorithm::step5(int *ass, Number *dM, bool *sM, bool *nSM, bool *pM, bool *cCs, bool *cRs, int nRs, int nCs, int mD)
+void HungarianAlgorithm::step5(int *assignment, Number *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim)
 {
 	Number h, value;
 	int row, col;
 
 	/* find smallest uncovered element h */
 	h = Number{std::numeric_limits<int>::max()};
-	for (row = 0; row<nRs; row++)
-		if (!cRs[row])
-			for (col = 0; col<nCs; col++)
-				if (!cCs[col])
+	for (row = 0; row<nOfRows; row++)
+		if (!coveredRows[row])
+			for (col = 0; col<nOfColumns; col++)
+				if (!coveredColumns[col])
 				{
-					value = dM[row + nRs*col];
+					value = distMatrix[row + nOfRows*col];
 					if (value < h)
 						h = value;
 				}
 
 	/* add h to each covered row */
-	for (row = 0; row<nRs; row++)
-		if (cRs[row])
-			for (col = 0; col<nCs; col++)
-				dM[row + nRs*col] += h;
+	for (row = 0; row<nOfRows; row++)
+		if (coveredRows[row])
+			for (col = 0; col<nOfColumns; col++)
+				distMatrix[row + nOfRows*col] += h;
 
 	/* subtract h from each uncovered column */
-	for (col = 0; col<nCs; col++)
-		if (!cCs[col])
-			for (row = 0; row<nRs; row++)
-				dM[row + nRs*col] -= h;
+	for (col = 0; col<nOfColumns; col++)
+		if (!coveredColumns[col])
+			for (row = 0; row<nOfRows; row++)
+				distMatrix[row + nOfRows*col] -= h;
 
 	/* move to step 3 */
-	step3(ass, dM, sM, nSM, pM, cCs, cRs, nRs, nCs, mD);
+	step3(assignment, distMatrix, starMatrix, newStarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim);
 }
