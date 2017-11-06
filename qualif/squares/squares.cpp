@@ -288,12 +288,14 @@ void solve(const std::vector<int>& digits) {
 
 	Numbers vec;
 	int w = digits.size() / 3;
+	int s = (w == 9 ? w - 2 : w);
 
 	vec.push_back(0);
-	for (int i = 1; i < w - 1; ++i) {
+	for (int i = 1; i < s; ++i) {
 		sieve(ds, vec, i);
 	}
 
+#if 0
 	int s = w - 1;
 	if (vec.size() < 100000) {
 		s = w;
@@ -301,6 +303,7 @@ void solve(const std::vector<int>& digits) {
 			sieve(ds, vec, w - 1);
 		}
 	}
+#endif
 
 	std::cout << find_best(ds, vec, s, w) << std::endl;
 }
