@@ -295,7 +295,7 @@ void solve(const std::vector<int>& digits) {
 	}
 
 	int s = w - 1;
-	if (vec.size() < 1000000) {
+	if (vec.size() < 100000) {
 		s = w;
 		if (w >= 2) {
 			sieve(ds, vec, w - 1);
