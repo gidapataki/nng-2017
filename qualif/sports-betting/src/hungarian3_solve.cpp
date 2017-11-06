@@ -72,9 +72,8 @@ Number solve(const std::vector<std::vector<Number>>& offers,
 
 	const auto expandedMatrix = expandMatrix(offers, bookieLimits);
 	auto invertedMatrix = invert(expandedMatrix);
-	HungarianAlgorithm solver;
 	std::vector<int> assignment;
-	auto naiveCost = solver.Solve(invertedMatrix, assignment);
+	auto naiveCost = solveHungarian(invertedMatrix, assignment);
 
 	std::vector<Number> chosenOdds;
 	chosenOdds.reserve(assignment.size());
