@@ -4,6 +4,10 @@ project(nng-2017-sports-betting)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules" ${CMAKE_MODULE_PATH})
 
+find_package(Boost)
+
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 14)
