@@ -340,6 +340,7 @@ void solve_input() {
 	if (testcases.size() <= 20) {
 
 	std::vector<std::pair<int, int>> pipes;
+	pipes.reserve(testcases.size());
 	std::vector<std::string> results;
 	for (auto& digits : testcases) {
 		pipes.push_back(std::make_pair(-1, -1));
