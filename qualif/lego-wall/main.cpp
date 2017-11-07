@@ -31,6 +31,10 @@ void Bricks::Normalize() {
     }
 }
 
+bool operator<(const Bricks& lhs, const Bricks& rhs) {
+    return lhs.bricks < rhs.bricks;
+}
+
 bool operator==(const Bricks& lhs, const Bricks& rhs) {
     return lhs.bricks == rhs.bricks;
 }
@@ -92,10 +96,10 @@ auto memoize(R (*f)(Args... arg)) {
         auto key = std::make_tuple(args...);
         auto it = table.find(key);
         if (it == end(table)) {
+            it = table.insert(std::make_pair(key, f(args...))).first;
 #ifdef CACHE_STATS
             ++cache_miss;
 #endif
-            it = table.insert(std::make_pair(key, f(args...))).first;
         }
         return it->second;
     };
