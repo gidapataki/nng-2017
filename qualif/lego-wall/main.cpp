@@ -114,7 +114,7 @@ struct EveryWall4<0> {
 };
 
 static std::function<std::uint64_t(Bricks, bool, bool, bool)> memoizedEveryWall4[] = {
-    memoize(EveryWall4<0>::apply),
+    EveryWall4<0>::apply,
     memoize(EveryWall4<1>::apply),
     memoize(EveryWall4<2>::apply),
     memoize(EveryWall4<3>::apply),
