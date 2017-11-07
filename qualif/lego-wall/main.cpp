@@ -24,7 +24,7 @@ uint64_t getBits(uint64_t value, uint64_t start_bit, uint64_t length) {
 
 uint64_t setBits(uint64_t value, uint64_t start_bit, uint64_t length, uint64_t new_bits) {
     assert(new_bits < (1 << length));
-    value &= mask(start_bit, length);
+    value &= ~mask(start_bit, length);
     value |= new_bits << start_bit;
     return value;
 }
