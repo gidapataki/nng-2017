@@ -9,6 +9,11 @@
 #include <boost/functional/hash.hpp>
 #include <boost/container/static_vector.hpp>
 
+#ifdef CACHE_STATS
+int cache_miss = 0;
+int cache_query = 0;
+#endif
+
 using SingleBricks = boost::container::static_vector<int, 5>;
 
 struct Bricks {
@@ -81,9 +86,15 @@ template<typename R, typename... Args>
 auto memoize(R (*f)(Args... arg)) {
     std::unordered_map<std::tuple<Args...>, R> table;
     return [f, table](Args... args) mutable {
+#ifdef CACHE_STATS
+        ++cache_query;
+#endif
         auto key = std::make_tuple(args...);
         auto it = table.find(key);
         if (it == end(table)) {
+#ifdef CACHE_STATS
+            ++cache_miss;
+#endif
             it = table.insert(std::make_pair(key, f(args...))).first;
         }
         return it->second;
@@ -230,78 +241,6 @@ std::uint64_t EveryWall4<H>::apply(Bricks bricks, bool ab, bool bc, bool cd) {
         bricks.bricks[1 - 1][a] += 1;
     }
     return result;
-
-#if 0
-    // 1a - 1a - 1a - 1a
-    for (int a = 0; a < bricks.bricks[1 - 1].size(); ++a) {
-        if (bricks.bricks[1 - 1][a] >= 4) {
-            bricks.bricks[1 - 1][a] -= 4;
-            result += memoizedEveryWall4[H-1](bricks, ab, bc, cd);
-            bricks.bricks[1 - 1][a] += 4;
-        }
-    }
-
-    // 1a - 1a - 1a - 1b
-    // 1a - 1a - 1b - 1a
-    // 1a - 1b - 1a - 1a
-    // 1b - 1a - 1a - 1a
-    for (int a = 0; a < bricks.bricks[1 - 1].size(); ++a) {
-        for (int b = 0; b < bricks.bricks[1 - 1].size(); ++b) {
-            if (a != b && bricks.bricks[1 - 1][a] >= 3) {
-                bricks.bricks[1 - 1][a] -= 3;
-                result += 4 * memoizedEveryWall4[H-1](bricks, ab, bc, cd);
-                bricks.bricks[1 - 1][a] += 3;
-            }
-        }
-    }
-
-    return result;
-#endif
-
-#if 0
-    boost::container::static_vector<std::tuple<int, int>, 4> chosen_bricks;
-    std::vector<std::tuple<int, int>> brick_vector;
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < bricks.bricks[i].size(); ++j) {
-            brick_vector.emplace_back(i, j);
-        }
-    }
-
-
-
-    for (int a = 0; a < brick_vector.size(); ++a) {
-        for (int b = 0; b < brick_vector.size(); ++b) {
-            for (int c = 0; c < brick_vector.size(); ++c) {
-                for (int d = 0; d < brick_vector.size(); ++d) {
-
-                }
-            }
-        }
-    }
-#endif
-
-#if 0
-    int length = 0;
-    while (true) {
-        for (int i = 0; i < 4; ++i) {
-            int brick_length = i+1;
-            if (length + brick_length > 4) {
-                goto done;
-            }
-            for (int j = 0; j < bricks.bricks[i].size(); ++j) {
-                int count = bricks.bricks[i][j];
-                if (count == 0) {
-                    continue;
-                }
-                length += brick_length;
-                chosen_bricks.emplace_back(i, j);
-            }
-        }
-    }
-done:
-#endif
-    return result;
-    // return 2 * memoizedEveryWall4[H-1](bricks, ab, bc, cd);
 }
 
 std::uint64_t doTheThing(int height, Bricks bricks) {
@@ -323,5 +262,11 @@ int main() {
         }
         auto all_count = doTheThing(height, bricks);
         std::cout << all_count << std::endl;
+#ifdef CACHE_STATS
+        std::cerr << "Cache miss ratio: " << cache_miss << "/" << cache_query << " ("
+            << double(cache_miss) / cache_query * 100 << "%)" << std::endl;
+        cache_miss = 0;
+        cache_query = 0;
+#endif
     }
 }
