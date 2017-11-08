@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 
 SED="sed"
-SED_ARGS=("--in-place")
 if which gsed > /dev/null; then
     SED="gsed"
-    SED_ARGS=("-i" "''")
 fi
 
 function substitute() {
