@@ -29,6 +29,95 @@ uint64_t setBits(uint64_t value, uint64_t start_bit, uint64_t length, uint64_t n
     return value;
 }
 
+struct BrickBits {
+    union {
+        uint64_t all_bits;
+        struct {
+            unsigned char type_counts[5];
+
+            unsigned char ones_end: 4;
+            unsigned char twos_end: 4;
+            unsigned char threes_end: 4;
+            unsigned char fours_end: 4;
+            unsigned char ab : 1;
+            unsigned char bc : 1;
+            unsigned char cd : 1;
+        };
+    };
+
+    void CopyCounts(
+        unsigned char from_start,
+        unsigned char from_end,
+        unsigned char to_start)
+    {
+        assert(from_end >= from_start);
+        assert(from_end <= 5);
+        assert(from_start <= 5);
+
+        auto length = from_end - from_start;
+
+        assert(to_start + length <= 5);
+
+        unsigned char buffer[5];
+        for (int i = from_start; i < from_end; ++i) {
+            buffer[i - from_start] = type_counts[i];
+        }
+        for (int i = to_start; i < to_start + length; ++i) {
+            type_counts[i] = buffer[i - to_start];
+        }
+    }
+
+    void Normalize();
+};
+
+void BrickBits::Normalize() {
+    std::sort(type_counts + 0, type_counts + ones_end, std::greater<unsigned char>{});
+    std::sort(type_counts + ones_end, type_counts + twos_end, std::greater<unsigned char>{});
+    std::sort(type_counts + twos_end, type_counts + threes_end, std::greater<unsigned char>{});
+    std::sort(type_counts + threes_end, type_counts + fours_end, std::greater<unsigned char>{});
+
+    auto old_ones_end = ones_end;
+    auto old_twos_end = twos_end;
+    auto old_threes_end = threes_end;
+    auto old_fours_end = fours_end;
+
+    // remove zeros from ends
+    for (int i = old_ones_end - 1; i >= 0; --i) { if (type_counts[i] == 0) { --ones_end; } }
+    for (int i = old_twos_end - 1; i >= old_ones_end; --i) { if (type_counts[i] == 0) { --twos_end; } }
+    for (int i = old_threes_end - 1; i >= old_twos_end; --i) { if (type_counts[i] == 0) { --threes_end; } }
+    for (int i = old_fours_end - 1; i >= old_threes_end; --i) { if (type_counts[i] == 0) { --fours_end; } }
+
+    CopyCounts(old_ones_end, twos_end, ones_end);
+    twos_end -= old_ones_end - ones_end;
+
+    CopyCounts(old_twos_end, threes_end, twos_end);
+    threes_end -= old_twos_end - twos_end;
+
+    CopyCounts(old_threes_end, fours_end, threes_end);
+    fours_end -= old_threes_end - threes_end;
+}
+
+std::ostream& operator<<(std::ostream& os, const BrickBits& bb) {
+    for (int i = 0; i < 5; ++i) { os << bb.type_counts[i] << ' '; }
+    os << '\n';
+
+    std::array<char, 5> owners{{ 'x', 'x', 'x', 'x', 'x' }};
+
+    for (int i = 0; i < bb.ones_end; ++i) { owners[i] = '1'; }
+    for (int i = bb.ones_end; i < bb.twos_end; ++i) { owners[i] = '2'; }
+    for (int i = bb.twos_end; i < bb.threes_end; ++i) { owners[i] = '3'; }
+    for (int i = bb.threes_end; i < bb.fours_end; ++i) { owners[i] = '4'; }
+
+    for (int i = 0; i < 5; ++i) { os << owners[i] << ' '; }
+    os << '\n';
+
+    return os;
+}
+
+std::size_t hash_value(const BrickBits& bricks) {
+    return bricks.all_bits;
+}
+
 using SingleBricks = boost::container::static_vector<int, 5>;
 
 struct Bricks {
@@ -95,6 +184,15 @@ struct hash<Bricks> {
     typedef Bricks argument_type;
     typedef std::size_t result_type;
     result_type operator()(const Bricks& b) const {
+        return hash_value(b);
+    }
+};
+
+template<>
+struct hash<BrickBits> {
+    typedef BrickBits argument_type;
+    typedef std::size_t result_type;
+    result_type operator()(const BrickBits& b) const {
         return hash_value(b);
     }
 };
