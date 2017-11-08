@@ -142,7 +142,7 @@ std::ostream& operator<<(std::ostream& stream, const Digits& ds) {
 	return stream;
 }
 
-constexpr unsigned pow10_values[9] = {
+constexpr unsigned pow10_values[10] = {
 	1,           // 10^0
 	10,          // 10^1
 	100,         // 10^2
@@ -152,6 +152,7 @@ constexpr unsigned pow10_values[9] = {
 	1000000,     // 10^6
 	10000000,    // 10^7
 	100000000,   // 10^8
+	1000000000,  // 10^9
 };
 
 constexpr unsigned pow10(int n) {
@@ -177,6 +178,17 @@ Digits combined_digits(uint64_t n) {
 	}
 
 	value = n;
+	while (value > 0) {
+		inc_digit(result, value % 10);
+		value /= 10;
+	}
+
+	return result;
+}
+
+Digits exact_digits(uint64_t n) {
+	Digits result;
+	auto value = n;
 	while (value > 0) {
 		inc_digit(result, value % 10);
 		value /= 10;
@@ -260,20 +272,100 @@ bool accept_exact(const Digits& provided, const Digits& required) {
 	return true;
 }
 
-uint64_t find_best(const Digits& ds, const Numbers& vec, int sieved, int width) {
+Digits x_digits;
+
+bool accept_exact_combined(const Digits& ds, uint64_t n) {
+	Digits n_digits;
+	auto value = n;
+
+	while (value > 0) {
+		inc_digit(n_digits, value % 10);
+		value /= 10;
+	}
+
+	// value = (n +1);
+	// while (value > 0) {
+	// 	inc_digit(x_digits, value % 10);
+	// 	value /= 10;
+	// }
+
+	value = n * n;
+	while (value > 0) {
+		auto d = value % 10;
+		value /= 10;
+		inc_digit(n_digits, d);
+		if (get_digit(ds, d) < get_digit(n_digits, d)) {
+			return false;
+		}
+	}
+	return accept_exact(n_digits, ds);
+}
+
+uint64_t find_best1(const Digits& ds, const Numbers& vec, int sieved, int width) {
 	auto mul = pow10(std::max(0, sieved - 1));
-	for (int i = pow10(width - sieved + 1); i-- > 0;) {
+	int xx = 0;
+	for (auto i = pow10(width - sieved + 1); i-- > 0;) {
 		for (auto it = vec.rbegin(), ie = vec.rend(); it != ie; ++it) {
+			++xx;
 			auto p = *it;
 			auto px = p + i * mul;
 			auto px_digits = combined_digits(px);
 			if (accept_exact(ds, px_digits)) {
+				std::cerr << xx << std::endl;
 				return px;
 			}
 		}
 	}
-
 	return 0;
+}
+
+uint64_t find_best2(const Digits& ds, const Numbers& vec, int sieved, int width) {
+	auto mul = pow10(std::max(0, sieved - 1));
+	int xx = 0;
+	for (auto i = pow10(width - sieved + 1); i-- > 0;) {
+		for (auto it = vec.rbegin(), ie = vec.rend(); it != ie; ++it) {
+			++xx;
+			auto p = *it;
+			auto px = p + i * mul;
+			if (accept_exact_combined(ds, px)) {
+				std::cerr << xx << std::endl;
+				return px;
+			}
+		}
+	}
+	return 0;
+}
+
+uint64_t find_best3(const Digits& ds, const Numbers& vec, int sieved, int width) {
+	auto mul = pow10(std::max(0, sieved - 1));
+	int high = pow10(width - sieved + 1);
+	int low = 0;
+	uint64_t best = 0;
+
+	for (auto it = vec.rbegin(), ie = vec.rend(); it != ie; ++it) {
+		uint64_t p = *it;
+		auto base_digits = exact_digits(p);
+		for (auto i = high; i-- > low;) {
+			auto px = p + i * mul;
+			auto px_digits = base_digits;
+			auto pow_digits = exact_digits(px * px);
+			if (i > 10) {
+				inc_digit(px_digits, i / 10);
+			}
+			inc_digit(px_digits, i % 10);
+			px_digits += pow_digits;
+
+			if (accept_exact(ds, px_digits)) {
+				low = i + 1;
+				best = std::max(best, px);
+			}
+		}
+		// std::cerr << low << std::endl;
+		if (low >= high) {
+			break;
+		}
+	}
+	return best;
 }
 
 void solve(const std::vector<int>& digits) {
@@ -288,24 +380,14 @@ void solve(const std::vector<int>& digits) {
 
 	Numbers vec;
 	int w = digits.size() / 3;
-	int s = (w == 9 ? w - 1 : w);
+	int s = w ;
 
 	vec.push_back(0);
 	for (int i = 1; i < s; ++i) {
 		sieve(ds, vec, i);
 	}
 
-#if 0
-	int s = w - 1;
-	if (vec.size() < 100000) {
-		s = w;
-		if (w >= 2) {
-			sieve(ds, vec, w - 1);
-		}
-	}
-#endif
-
-	std::cout << find_best(ds, vec, s, w) << std::endl;
+	std::cout << find_best2(ds, vec, s, w) << " " << vec.size() << std::endl;
 }
 
 void solve_example() {
@@ -344,11 +426,17 @@ void solve_input() {
 }
 
 int main() {
+	// evil
+	solve({
+		7, 9, 4, 5, 2, 2, 7, 0, 1,
+		6, 3, 1, 2, 6, 6, 3, 2, 2,
+		4, 0, 4, 3, 3, 5, 4, 0, 1});
 	// solve({
 	// 	4, 5, 6, 9, 4, 0, 3, 8, 2, 2, 0, 8, 7, 9,
 	// 	4, 5, 1, 2, 7, 0, 2, 3, 0, 5, 9, 2, 4});
 	// solve_example();
-	solve_input();
+	// solve_input();
+	std::cerr << int(x_digits.digit[3]) << std::endl;
 
 #if DEBUG_MEMORY
         std::cerr << "MaxMem = " << g_MaxAllocatedSize / (1 << 20) << "MB" << std::endl;
