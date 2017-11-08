@@ -4,6 +4,7 @@
 #include <array>
 #include <algorithm>
 #include <utility>
+#include <fstream>
 #include <unordered_map>
 
 #include <boost/functional/hash.hpp>
@@ -585,17 +586,25 @@ std::uint64_t doTheThing(int height, Bricks bricks) {
     return new_result;
 }
 
-int main() {
+int main(int argc, char** argv) {
+    auto* in_ptr = &std::cin;
+    std::ifstream in_file;
+    if (argc == 2) {
+        in_file.open(argv[1]);
+        in_ptr = &in_file;
+    }
+    auto& in = *in_ptr;
+
     int test_count;
-    std::cin >> test_count;
+    in >> test_count;
 
     for (int i = 0; i < test_count; ++i) {
         int height, brick_type_count;
-        std::cin >> height >> brick_type_count;
+        in >> height >> brick_type_count;
         Bricks bricks;
         for (int j = 0; j < brick_type_count; ++j) {
             int count, length;
-            std::cin >> count >> length;
+            in >> count >> length;
             bricks.bricks[length - 1].push_back(count);
         }
         auto all_count = doTheThing(height, bricks);
