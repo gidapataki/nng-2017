@@ -28,6 +28,8 @@ struct BrickBits {
             unsigned char ab : 1;
             unsigned char bc : 1;
             unsigned char cd : 1;
+
+            unsigned char height : 5;
         };
     };
 
@@ -260,44 +262,16 @@ auto memoize(R (*f)(Arg arg)) {
     };
 }
 
-template<int H>
-struct EveryBits4 {
-    static std::uint64_t apply(BrickBits bricks);
-};
+std::uint64_t EveryBits4(BrickBits bits);
 
-template<>
-struct EveryBits4<0> {
-    static std::uint64_t apply(BrickBits bricks) {
-        return (bricks.ab & bricks.bc & bricks.cd) != 0;
+auto memoizedEveryBits4 = memoize(EveryBits4);
+
+std::uint64_t EveryBits4(BrickBits bits) {
+    --bits.height;
+    if (bits.height == 0) {
+        return (bits.ab & bits.bc & bits.cd) != 0;
     }
-};
 
-static std::function<std::uint64_t(BrickBits)> memoizedEveryBits4[] = {
-    EveryBits4<0>::apply,
-    memoize(EveryBits4<1>::apply),
-    memoize(EveryBits4<2>::apply),
-    memoize(EveryBits4<3>::apply),
-    memoize(EveryBits4<4>::apply),
-    memoize(EveryBits4<5>::apply),
-    memoize(EveryBits4<6>::apply),
-    memoize(EveryBits4<7>::apply),
-    memoize(EveryBits4<8>::apply),
-    memoize(EveryBits4<9>::apply),
-    memoize(EveryBits4<10>::apply),
-    memoize(EveryBits4<11>::apply),
-    memoize(EveryBits4<12>::apply),
-    memoize(EveryBits4<13>::apply),
-    memoize(EveryBits4<14>::apply),
-    memoize(EveryBits4<15>::apply),
-    memoize(EveryBits4<16>::apply),
-    memoize(EveryBits4<17>::apply),
-    memoize(EveryBits4<18>::apply),
-    memoize(EveryBits4<19>::apply),
-    memoize(EveryBits4<20>::apply)
-};
-
-template<int H>
-std::uint64_t EveryBits4<H>::apply(BrickBits bits) {
     bits.Normalize();
     std::uint64_t result = 0;
 
@@ -308,7 +282,7 @@ std::uint64_t EveryBits4<H>::apply(BrickBits bits) {
         bb.ab = true;
         bb.bc = true;
         bb.cd = true;
-        result += memoizedEveryBits4[H-1](bb);
+        result += memoizedEveryBits4(bb);
     }
 
     // 1 - 3
@@ -321,12 +295,12 @@ std::uint64_t EveryBits4<H>::apply(BrickBits bits) {
             {
                 auto bb2 = bb;
                 bb2.ab = true;
-                result += memoizedEveryBits4[H-1](bb2);
+                result += memoizedEveryBits4(bb2);
             }
             {
                 auto bb2 = bb;
                 bb2.cd = true;
-                result += memoizedEveryBits4[H-1](bb2);
+                result += memoizedEveryBits4(bb2);
             }
         }
     }
@@ -338,7 +312,7 @@ std::uint64_t EveryBits4<H>::apply(BrickBits bits) {
             bb.type_counts[a] -= 2;
             bb.ab = true;
             bb.cd = true;
-            result += memoizedEveryBits4[H-1](bb);
+            result += memoizedEveryBits4(bb);
         }
     }
 
@@ -350,7 +324,7 @@ std::uint64_t EveryBits4<H>::apply(BrickBits bits) {
             bb.type_counts[b] -= 1;
             bb.ab = true;
             bb.cd = true;
-            result += 2 * memoizedEveryBits4[H-1](bb);
+            result += 2 * memoizedEveryBits4(bb);
         }
     }
 
@@ -366,17 +340,17 @@ std::uint64_t EveryBits4<H>::apply(BrickBits bits) {
                 {
                     auto bb2 = bb;
                     bb2.ab = true;
-                    result += memoizedEveryBits4[H-1](bb2);
+                    result += memoizedEveryBits4(bb2);
                 }
                 {
                     auto bb2 = bb;
                     bb2.bc = true;
-                    result += memoizedEveryBits4[H-1](bb2);
+                    result += memoizedEveryBits4(bb2);
                 }
                 {
                     auto bb2 = bb;
                     bb2.cd = true;
-                    result += memoizedEveryBits4[H-1](bb2);
+                    result += memoizedEveryBits4(bb2);
                 }
             }
         }
@@ -398,17 +372,17 @@ std::uint64_t EveryBits4<H>::apply(BrickBits bits) {
                 {
                     auto bb2 = bb;
                     bb2.ab = true;
-                    result += 2 * memoizedEveryBits4[H-1](bb2);
+                    result += 2 * memoizedEveryBits4(bb2);
                 }
                 {
                     auto bb2 = bb;
                     bb2.bc = true;
-                    result += 2 * memoizedEveryBits4[H-1](bb2);
+                    result += 2 * memoizedEveryBits4(bb2);
                 }
                 {
                     auto bb2 = bb;
                     bb2.cd = true;
-                    result += 2 * memoizedEveryBits4[H-1](bb2);
+                    result += 2 * memoizedEveryBits4(bb2);
                 }
             }
         }
@@ -425,7 +399,7 @@ std::uint64_t EveryBits4<H>::apply(BrickBits bits) {
                 for (int d = 0; d < bits.ones_end; ++d) {
                     if (bits.type_counts[d] == 0) { continue; }
                     bits.type_counts[d] -= 1;
-                    result += memoizedEveryBits4[H-1](bits);
+                    result += memoizedEveryBits4(bits);
                     bits.type_counts[d] += 1;
                 }
                 bits.type_counts[c] += 1;
@@ -580,7 +554,8 @@ std::uint64_t EveryWall4<H>::apply(Bricks bricks, bool ab, bool bc, bool cd) {
 
 std::uint64_t doTheThing(int height, Bricks bricks) {
     auto bits = BitsFromBricks(bricks);
-    auto new_result = memoizedEveryBits4[height](bits);
+    bits.height = height + 1;
+    auto new_result = memoizedEveryBits4(bits);
     // auto old_result = memoizedEveryWall4[height](bricks, false, false, false);
     // assert(new_result == old_result);
     return new_result;
