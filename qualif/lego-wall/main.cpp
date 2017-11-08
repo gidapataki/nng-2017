@@ -98,15 +98,15 @@ void BrickBits::Normalize() {
 }
 
 std::ostream& operator<<(std::ostream& os, const BrickBits& bb) {
-    for (int i = 0; i < 5; ++i) { os << bb.type_counts[i] << ' '; }
+    for (int i = 0; i < 5; ++i) { os << int(bb.type_counts[i]) << ' '; }
     os << '\n';
 
     std::array<char, 5> owners{{ 'x', 'x', 'x', 'x', 'x' }};
 
-    for (int i = 0; i < bb.ones_end; ++i) { owners[i] = '1'; }
-    for (int i = bb.ones_end; i < bb.twos_end; ++i) { owners[i] = '2'; }
-    for (int i = bb.twos_end; i < bb.threes_end; ++i) { owners[i] = '3'; }
-    for (int i = bb.threes_end; i < bb.fours_end; ++i) { owners[i] = '4'; }
+    for (int i = 0; i < bb.ones_end; ++i) { assert(owners[i] == 'x'); owners[i] = '1'; }
+    for (int i = bb.ones_end; i < bb.twos_end; ++i) { assert(owners[i] == 'x'); owners[i] = '2'; }
+    for (int i = bb.twos_end; i < bb.threes_end; ++i) { assert(owners[i] == 'x'); owners[i] = '3'; }
+    for (int i = bb.threes_end; i < bb.fours_end; ++i) { assert(owners[i] == 'x'); owners[i] = '4'; }
 
     for (int i = 0; i < 5; ++i) { os << owners[i] << ' '; }
     os << '\n';
@@ -145,6 +145,36 @@ bool operator==(const Bricks& lhs, const Bricks& rhs) {
 
 bool operator!=(const Bricks& lhs, const Bricks& rhs) {
     return !(lhs == rhs);
+}
+
+BrickBits BitsFromBricks(const Bricks& bricks) {
+    BrickBits bits{};
+
+    bits.ab = false;
+    bits.bc = false;
+    bits.cd = false;
+
+    bits.ones_end = 0;
+    for (int i = 0; i < bricks.bricks[0].size(); ++i) {
+        bits.type_counts[bits.ones_end++] = bricks.bricks[0][i];
+    }
+
+    bits.twos_end = bits.ones_end;
+    for (int i = 0; i < bricks.bricks[1].size(); ++i) {
+        bits.type_counts[bits.twos_end++] = bricks.bricks[1][i];
+    }
+
+    bits.threes_end = bits.twos_end;
+    for (int i = 0; i < bricks.bricks[2].size(); ++i) {
+        bits.type_counts[bits.threes_end++] = bricks.bricks[2][i];
+    }
+
+    bits.fours_end = bits.threes_end;
+    for (int i = 0; i < bricks.bricks[3].size(); ++i) {
+        bits.type_counts[bits.fours_end++] = bricks.bricks[3][i];
+    }
+
+    return bits;
 }
 
 std::size_t hash_value(const Bricks& bricks) {
