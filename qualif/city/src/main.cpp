@@ -2,10 +2,12 @@
 #include <string>
 #include <vector>
 #include <deque>
-#include <list>
+#include <set>
+#include <array>
 #include <cassert>
 #include <limits>
 #include <functional>
+#include "matrix.hpp"
 
 
 // Helpers /////////////////////////////////////////////////////////////////////
@@ -43,18 +45,42 @@ struct Route {
 	Direction next = Direction::kNone;
 };
 
+struct Car {
+	Car() = default;
+	Car(int index, int target, int emission, int origin)
+		: index(index)
+		, target(target)
+		, emission(emission)
+		, origin(origin)
+	{}
+
+	// immutable
+	int index = -1;
+	int target = -1;
+	int emission = -1;
+	int origin = -1;
+
+	// status
+	Position pos;
+	CarStatus status = CarStatus::kInGarage;
+
+	// routing data
+	Direction next = Direction::kNone;
+	int prio = 0;
+	int color = 0;
+};
+
 struct Cell {
 	CellType type = CellType::kVoid;
 	bool has_neighbor[4] = {};
 	Route route[9];
+	Car* current = nullptr;
+	std::array<Car*, 4> candidates;
 };
 
-struct Car {
-	int index = -1;
-	int target = -1;
-	int emission = -1;
+struct Garage {
 	Position pos;
-	CarStatus status = CarStatus::kInGarage;
+	std::deque<Car*> cars;
 };
 
 int fromDirection(Direction dir) {
@@ -101,6 +127,13 @@ Position neighbor(const Position& pos, Direction dir) {
 	return {};
 }
 
+template<typename T>
+std::vector<T> concat(const std::vector<T>& lhs, const std::vector<T>& rhs) {
+	auto result = lhs;
+	result.insert(result.end(), rhs.begin(), rhs.end());
+	return result;
+}
+
 std::ostream& operator<<(std::ostream& stream, const Position& pos) {
 	stream << "(" << pos.row << ", " << pos.col << ")";
 	return stream;
@@ -118,6 +151,11 @@ bool operator==(const Position& lhs, const Position& rhs) {
 bool operator!=(const Position& lhs, const Position& rhs) {
 	return !(lhs == rhs);
 }
+
+bool operator<(const Position& lhs, const Position& rhs) {
+	return std::tie(lhs.row, lhs.col) < std::tie(rhs.row, rhs.col);
+}
+
 
 CellType cellTypeFromChar(char ch) {
 	switch (ch) {
@@ -138,9 +176,9 @@ char cellTypeToChar(CellType type) {
 	return ' ';
 }
 
-// Grid ////////////////////////////////////////////////////////////////////////
+// City ////////////////////////////////////////////////////////////////////////
 
-class Grid {
+class City {
 public:
 	void fromStream(std::istream& stream);
 	void showRoute(int start, int target);
@@ -154,47 +192,51 @@ private:
 	bool isValid(const Position& pos);
 	Cell& getCell(const Position& pos);
 	Route& getRoute(const Position& pos, int target);
+	Car*& getCandidate(const Position& pos, Direction dir);
+	const Route& getCarRoute(const Car& car);
+	Position getCarNextPos(const Car& car);
+	std::vector<Car*> garageFirsts();
+	int countCandidates(const Position& pos);
 
 	int size_ = 0;
 	int targets_ = 0;
-	std::vector<std::vector<Cell>> cells_;
-	std::vector<Position> start_pos_;
-	std::vector<Position> end_pos_;
+	matrix<Cell> cells_;
+	std::vector<Position> target_pos_;
 	std::vector<Car> cars_;
-	std::vector<std::deque<Car*>> garages_;
+	std::vector<Garage> garages_;
 };
 
 
-void Grid::fromStream(std::istream& stream) {
+void City::fromStream(std::istream& stream) {
 	stream >> size_;
-	cells_.resize(size_);
+	cells_ = matrix<Cell>(size_, size_);
 	for (int row = 0; row < size_; ++row) {
 		std::string line;
 		stream >> line;
 		assert(line.size() >= size_);
 
-		cells_[row].resize(size_);
 		for (int col = 0; col < size_; ++col) {
 			auto type = cellTypeFromChar(line[col]);
-			cells_[row][col].type = type;
+			cells_(row, col).type = type;
 			if (type == CellType::kStart) {
-				start_pos_.push_back({row, col});
+				// Position pos{row, col};
+				garages_.push_back({Position{row, col}});
 			} else if (type == CellType::kEnd) {
-				end_pos_.push_back({row, col});
+				target_pos_.push_back({row, col});
 			}
 		}
 	}
-	targets_ = end_pos_.size();
+	targets_ = target_pos_.size();
 
 	int k = 0;
 	stream >> k;
 	cars_.resize(k);
-	garages_.resize(start_pos_.size());
 	for (int i = 0; i < k; ++i) {
 		int g, w, e;
 		stream >> g >> w >> e;
-		cars_[i] = Car{i, w, e, start_pos_[g], CarStatus::kInGarage};
-		garages_[g].push_back(&cars_[i]);
+		cars_[i] = Car(i, w, e, g);
+		cars_[i].pos = garages_[g].pos;
+		garages_[g].cars.push_back(&cars_[i]);
 	}
 
 	createGraph();
@@ -203,21 +245,33 @@ void Grid::fromStream(std::istream& stream) {
 	}
 }
 
-bool Grid::isValid(const Position& pos) {
+bool City::isValid(const Position& pos) {
 	return
 		pos.row >= 0 && pos.row < size_ &&
 		pos.col >= 0 && pos.col < size_;
 }
 
-Cell& Grid::getCell(const Position& pos) {
-	return cells_[pos.row][pos.col];
+Cell& City::getCell(const Position& pos) {
+	return cells_(pos.row, pos.col);
 }
 
-Route& Grid::getRoute(const Position& pos, int target) {
+Route& City::getRoute(const Position& pos, int target) {
 	return getCell(pos).route[target];
 }
 
-void Grid::foreachNeighbor(
+Car*& City::getCandidate(const Position& pos, Direction dir) {
+	return getCell(pos).candidates[fromDirection(dir)];
+}
+
+const Route& City::getCarRoute(const Car& car) {
+	return getRoute(car.pos, car.target);
+}
+
+Position City::getCarNextPos(const Car& car) {
+	return neighbor(car.pos, car.next);
+}
+
+void City::foreachNeighbor(
 	const Position& pos,
 	std::function<void(const Position&, Direction dir)> fn)
 {
@@ -230,7 +284,7 @@ void Grid::foreachNeighbor(
 	}
 }
 
-void Grid::createGraph() {
+void City::createGraph() {
 	for (int row = 0; row < size_; ++row) {
 		for (int col = 0; col < size_; ++col) {
 			auto& cell = getCell({row, col});
@@ -250,9 +304,9 @@ void Grid::createGraph() {
 	}
 }
 
-void Grid::createRoute(int target) {
+void City::createRoute(int target) {
 	std::deque<Position> pipe;
-	auto& root_pos = end_pos_[target];
+	auto& root_pos = target_pos_[target];
 	getRoute(root_pos, target) = Route{0, Direction::kNone};
 	pipe.push_back(root_pos);
 
@@ -273,7 +327,8 @@ void Grid::createRoute(int target) {
 		});
 	}
 
-	for (auto& sp : start_pos_) {
+	for (auto& garage : garages_) {
+		auto sp = garage.pos;
 		auto dst = std::numeric_limits<int>::max();
 		auto next = Direction::kNone;
 		foreachNeighbor(sp, [&](const Position& nb_pos, Direction dir) {
@@ -287,8 +342,8 @@ void Grid::createRoute(int target) {
 	}
 }
 
-void Grid::showRoute(int start, int target) {
-	auto sp = start_pos_[start];
+void City::showRoute(int start, int target) {
+	auto sp = garages_[start].pos;
 	auto next = getRoute(sp, target).next;
 
 	std::cerr << sp << std::endl;
@@ -316,8 +371,172 @@ void Grid::showRoute(int start, int target) {
 	}
 }
 
-void Grid::solve() {
+std::vector<Car*> City::garageFirsts() {
+	std::vector<Car*> result;
+	for (auto& garage : garages_) {
+		if (garage.cars.empty()) {
+			continue;
+		}
+		result.push_back(garage.cars.front());
+	}
+	return result;
+}
+
+int City::countCandidates(const Position& pos) {
+	auto& cell = getCell(pos);
+	int count = 0;
+	for (int i = 0; i < 4; ++i) {
+		if (cell.candidates[i]) {
+			++count;
+		}
+	}
+	return count;
+}
+
+void City::solve() {
 	using Commands = std::vector<std::pair<int, Direction>>;
+	std::vector<Car*> driving;
+	while (true) {
+		Commands cmds;
+		auto movable_cars = concat(driving, garageFirsts());
+
+		// clear cells
+		for (auto& cell : cells_) {
+			cell.current = nullptr;
+			cell.candidates.fill(nullptr);
+		}
+
+		// update cars and cells
+		for (auto* car : movable_cars) {
+			auto pos = car->pos;
+			auto next = getCarRoute(*car).next;
+			auto next_pos = neighbor(pos, next);
+
+			getCell(pos).current = car;
+			getCandidate(next_pos, opposite(next)) = car;
+
+			car->prio = 0;
+			car->color = 0;
+			car->next = next;
+		}
+
+		// resolve circles
+		{
+			std::set<Car*> cars(movable_cars.begin(), movable_cars.end());
+			while (!cars.empty()) {
+				auto* car0 = *cars.begin();
+				auto* car = car0;
+				bool blocked = false;
+
+				assert(car->color == 0);
+				car->color = 1;
+				while (true) {
+					car = getCell(getCarNextPos(*car)).current;
+					if (!car || car->color == 2) {
+						// previous cars may still proceed here
+						break;
+					}
+
+					if (car->color == 3) {
+						// this is part of a blocked area, other cars
+						// cannot go here
+						blocked = true;
+						break;
+					}
+
+					// circle
+					if (car->color == 1) {
+						// circles make blocked areas, but cars in there
+						// should still move (prio > 0)
+						blocked = true;
+						while (car->color != 3) {
+							auto ec = cars.erase(car);
+							assert(ec == 1);
+							car->color = 3;
+							car->prio = 10;
+							car = getCell(getCarNextPos(*car)).current;
+						}
+						break;
+					} else {
+						assert(car->color == 0);
+						car->color = 1;
+					}
+				}
+
+				car = car0;
+				while (car->color == 1) {
+					auto ec = cars.erase(car);
+					assert(ec == 1);
+					car->color = blocked ? 3 : 2;
+					car->prio = blocked ? -1 : 0;
+					car = getCell(getCarNextPos(*car)).current;
+				}
+			}
+		}
+
+		// resolve free conflicts
+		{
+			std::set<Position> steps;
+			for (auto* car : movable_cars) {
+				steps.insert(car->pos);
+			}
+
+			for (auto& pos : steps) {
+				if (countCandidates(pos) > 1) {
+					// calculate_trails()
+				}
+			}
+		}
+
+		// move unobstructed cars
+		// - todo implement -
+
+		// create commands
+		for (auto* car : movable_cars) {
+			if (car->prio == 0) {
+				continue;
+			}
+			if (car->status == CarStatus::kInGarage) {
+				car->status = CarStatus::kDriving;
+				auto& garage_queue = garages_[car->origin].cars;
+				assert(garage_queue.front() == car);
+				garage_queue.pop_front();
+				driving.push_back(car);
+			}
+
+			auto next = getRoute(car->pos, car->target).next;
+			cmds.push_back({car->index, next});
+		}
+
+		// commit
+		std::cout << cmds.size() << std::endl;
+		for (auto& cmd : cmds) {
+			auto index = cmd.first;
+			auto next = cmd.second;
+			auto& car = cars_[index];
+
+			car.pos = neighbor(car.pos, next);
+			if (car.pos == target_pos_[car.target]) {
+				car.status = CarStatus::kArrived;
+			}
+			std::cout
+				<< index << " " << toCommand(next)
+				<< std::endl;
+		}
+
+		// cleanup
+		driving.erase(std::remove_if(driving.begin(), driving.end(),
+			[](Car* car) -> bool {
+				return (car->status == CarStatus::kArrived);
+			}), driving.end());
+
+		if (cmds.size() == 0) {
+			break;
+		}
+	}
+	std::cout << 0 << std::endl;
+
+#if 0
 	for (auto& garage : garages_) {
 		std::list<Car*> driving;
 		while (!garage.empty() || !driving.empty()) {
@@ -346,7 +565,7 @@ void Grid::solve() {
 				auto& car = cars_[index];
 
 				car.pos = neighbor(car.pos, next);
-				if (car.pos == end_pos_[car.target]) {
+				if (car.pos == target_pos_[car.target]) {
 					car.status = CarStatus::kArrived;
 				}
 				std::cout
@@ -361,14 +580,15 @@ void Grid::solve() {
 		}
 	}
 	std::cout << 0 << std::endl;
+#endif
 }
 
 
 // Main ////////////////////////////////////////////////////////////////////////
 
 int main() {
-	Grid g;
-	g.fromStream(std::cin);
-	g.solve();
+	City city;
+	city.fromStream(std::cin);
+	city.solve();
 	return 0;
 }
