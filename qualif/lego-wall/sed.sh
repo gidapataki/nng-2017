@@ -30,3 +30,5 @@ substitute 's/to_start/ts/g'
 substitute 's/buffer/F/g'
 substitute 's/length/l/g'
 substitute 's/bricks/BS/g'
+
+python ../../tools/minifier.py main.cpp > minified.cpp
