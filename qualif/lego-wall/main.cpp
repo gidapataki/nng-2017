@@ -587,6 +587,7 @@ std::uint64_t doTheThing(int height, Bricks bricks) {
 }
 
 int main(int argc, char** argv) {
+    static_assert(sizeof(BrickBits) == sizeof(uint64_t), "");
     auto* in_ptr = &std::cin;
     std::ifstream in_file;
     if (argc == 2) {
