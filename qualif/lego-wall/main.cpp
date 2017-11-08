@@ -256,6 +256,24 @@ auto memoize(R (*f)(Args... arg)) {
     };
 }
 
+template<typename R, typename Arg>
+auto memoize(R (*f)(Arg arg)) {
+    std::unordered_map<Arg, R> table;
+    return [f, table](Arg arg) mutable {
+#ifdef CACHE_STATS
+        ++cache_query;
+#endif
+        auto it = table.find(arg);
+        if (it == end(table)) {
+            it = table.insert(std::make_pair(arg, f(arg))).first;
+#ifdef CACHE_STATS
+            ++cache_miss;
+#endif
+        }
+        return it->second;
+    };
+}
+
 template<int H>
 struct EveryBits4 {
     static std::uint64_t apply(BrickBits bricks);
