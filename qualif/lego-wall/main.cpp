@@ -173,25 +173,6 @@ struct hash<BrickBits> {
 
 } // namespace std
 
-template<typename R, typename... Args>
-auto memoize(R (*f)(Args... arg)) {
-    std::unordered_map<std::tuple<Args...>, R> table;
-    return [f, table](Args... args) mutable {
-#ifdef CACHE_STATS
-        ++cache_query;
-#endif
-        auto key = std::make_tuple(args...);
-        auto it = table.find(key);
-        if (it == end(table)) {
-            it = table.insert(std::make_pair(key, f(args...))).first;
-#ifdef CACHE_STATS
-            ++cache_miss;
-#endif
-        }
-        return it->second;
-    };
-}
-
 std::unordered_map<BrickBits, std::uint64_t> bits_cache;
 
 auto memoize(std::uint64_t (*f)(BrickBits arg)) {
