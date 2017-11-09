@@ -192,16 +192,16 @@ auto memoize(R (*f)(Args... arg)) {
     };
 }
 
-template<typename R, typename Arg>
-auto memoize(R (*f)(Arg arg)) {
-    std::unordered_map<Arg, R> table;
-    return [f, table](Arg arg) mutable {
+std::unordered_map<BrickBits, std::uint64_t> bits_cache;
+
+auto memoize(std::uint64_t (*f)(BrickBits arg)) {
+    return [f](BrickBits arg) mutable {
 #ifdef CACHE_STATS
         ++cache_query;
 #endif
-        auto it = table.find(arg);
-        if (it == end(table)) {
-            it = table.insert(std::make_pair(arg, f(arg))).first;
+        auto it = bits_cache.find(arg);
+        if (it == end(bits_cache)) {
+            it = bits_cache.insert(std::make_pair(arg, f(arg))).first;
 #ifdef CACHE_STATS
             ++cache_miss;
 #endif
@@ -221,6 +221,7 @@ std::uint64_t EveryBits4(BrickBits bits) {
     }
 
     bits.Normalize();
+
     std::uint64_t result = 0;
 
     // 4
@@ -379,6 +380,7 @@ int main(int argc, char** argv) {
     in >> test_count;
 
     for (int i = 0; i < test_count; ++i) {
+        bits_cache.clear();
         int height, brick_type_count;
         in >> height >> brick_type_count;
         Bricks bricks;
