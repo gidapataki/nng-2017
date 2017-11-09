@@ -203,6 +203,25 @@ std::uint64_t EveryBits4(BrickBits bits) {
 
     bits.Normalize();
 
+    // we only have ones, and still have a hole
+    if (bits.ones_end == bits.fours_end) {
+        if (bits.ab || bits.bc || bits.cd) {
+            return 0;
+        }
+    }
+
+    // we only have twos, and still have a hole in the middle
+    if (bits.ones_end == 0 && bits.twos_end == bits.fours_end) {
+        if (bits.bc) {
+            return 0;
+        }
+    }
+
+    // we only have threes
+    if (bits.ones_end == 0 && bits.twos_end == 0 && bits.threes_end == bits.fours_end) {
+        return 0;
+    }
+
     std::uint64_t result = 0;
 
     // 4
