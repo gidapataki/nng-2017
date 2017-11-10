@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <deque>
+#include <queue>
 #include <set>
 #include <array>
 #include <cassert>
@@ -225,7 +226,7 @@ struct Position {
 };
 
 struct Route {
-	int distance = std::numeric_limits<int>::max();
+	float distance = std::numeric_limits<float>::max();
 	Direction next = Direction::kNone;
 };
 
@@ -258,6 +259,8 @@ struct Cell {
 	// immutable
 	CellType type = CellType::kVoid;
 	bool has_neighbor[4] = {};
+	int flow_count[4] = {};
+	double flow_weight[4] = {};
 	Route route[9];
 
 	// status
@@ -266,6 +269,7 @@ struct Cell {
 
 	// algo data
 	int sum_emission = 0;
+	int color = 0;
 };
 
 struct Garage {
@@ -375,6 +379,8 @@ public:
 	void solve();
 
 private:
+	void initFlow();
+	void initWeights();
 	void createGraph();
 	void createRoute(int target);
 	void foreachNeighbor(const Position& pos,
@@ -433,6 +439,8 @@ void City::fromStream(std::istream& stream) {
 		garages_[g].cars.push_back(&cars_[i]);
 	}
 
+	initFlow();
+	initWeights();
 	createGraph();
 	for (int i = 0; i < targets_; ++i) {
 		createRoute(i);
@@ -478,6 +486,22 @@ void City::foreachNeighbor(
 	}
 }
 
+void City::initFlow() {
+	for (auto& cell : cells_) {
+		for (int i = 0; i < 4; ++i) {
+			cell.flow_count[i] = 0;
+		}
+	}
+}
+
+void City::initWeights() {
+	for (auto& cell : cells_) {
+		for (int i = 0; i < 4; ++i) {
+			cell.flow_weight[i] = 1.0;
+		}
+	}
+}
+
 void City::createGraph() {
 	for (int row = 0; row < size_; ++row) {
 		for (int col = 0; col < size_; ++col) {
@@ -499,31 +523,46 @@ void City::createGraph() {
 }
 
 void City::createRoute(int target) {
-	std::deque<Position> pipe;
+	using Item = std::tuple<float, Direction, Position>;
+	std::priority_queue<Item, std::vector<Item>, std::greater<Item>> queue;
+
 	auto& root_pos = target_pos_[target];
-	getRoute(root_pos, target) = Route{0, Direction::kNone};
-	pipe.push_back(root_pos);
+	queue.push(Item{0, Direction::kNone, root_pos});
 
-	while (!pipe.empty()) {
-		auto pos = pipe.front();
-		auto& cell = getCell(pos);
-		auto nb_distance = cell.route[target].distance + 1;
+	for (auto& cell : cells_) {
+		cell.color = 0;
+	}
 
-		pipe.pop_front();
-		foreachNeighbor(pos, [&](const Position& nb_pos, Direction dir) {
+	while (!queue.empty()) {
+		float distance = 0;
+		Direction dir = Direction::kNone;
+		Position pos;
+
+		std::tie(distance, dir, pos) = queue.top();
+		queue.pop();
+
+		if (getCell(pos).color > 0) {
+			continue;
+		}
+		getCell(pos).color = 1;
+		getRoute(pos, target) = Route{distance, dir};
+
+		foreachNeighbor(pos, [&](const Position& nb_pos, Direction nb_dir) {
 			auto& nb_cell = getCell(nb_pos);
-			auto& route = nb_cell.route[target];
-			if (route.next != Direction::kNone) {
+			if (nb_cell.color > 0) {
 				return;
 			}
-			route = Route{nb_distance, opposite(dir)};
-			pipe.push_back(nb_pos);
+
+			auto opp_dir = opposite(nb_dir);
+			int dx = fromDirection(opp_dir);
+			float nb_distance = distance + nb_cell.flow_weight[dx];
+			queue.push(Item{nb_distance, opp_dir, nb_pos});
 		});
 	}
 
 	for (auto& garage : garages_) {
 		auto sp = garage.pos;
-		auto dst = std::numeric_limits<int>::max();
+		auto dst = std::numeric_limits<float>::max();
 		auto next = Direction::kNone;
 		foreachNeighbor(sp, [&](const Position& nb_pos, Direction dir) {
 			auto nb_dst = getRoute(nb_pos, target).distance;
@@ -855,52 +894,6 @@ void City::solve() {
 		}
 	}
 	std::cout << 0 << std::endl;
-
-#if 0
-	for (auto& garage : garages_) {
-		std::list<Car*> driving;
-		while (!garage.empty() || !driving.empty()) {
-			Commands cmds;
-
-			// prepare
-			for (auto* car : driving) {
-				auto next = getRoute(car->pos, car->target).next;
-				cmds.push_back({car->index, next});
-			}
-
-			if (!garage.empty()) {
-				auto* car = garage.front();
-				auto next = getRoute(car->pos, car->target).next;
-				driving.push_back(car);
-				garage.pop_front();
-				cmds.push_back({car->index, next});
-				car->status = CarStatus::kDriving;
-			}
-
-			// commit
-			std::cout << cmds.size() << std::endl;
-			for (auto& cmd : cmds) {
-				auto index = cmd.first;
-				auto next = cmd.second;
-				auto& car = cars_[index];
-
-				car.pos = neighbor(car.pos, next);
-				if (car.pos == target_pos_[car.target]) {
-					car.status = CarStatus::kArrived;
-				}
-				std::cout
-					<< index << " " << toCommand(next)
-					<< std::endl;
-			}
-
-			// cleanup
-			driving.remove_if([](Car* car) -> bool {
-				return (car->status == CarStatus::kArrived);
-			});
-		}
-	}
-	std::cout << 0 << std::endl;
-#endif
 }
 
 
