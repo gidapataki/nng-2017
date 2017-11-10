@@ -64,18 +64,24 @@ struct Car {
 	Position pos;
 	CarStatus status = CarStatus::kInGarage;
 
-	// routing data
+	// algo data
 	Direction next = Direction::kNone;
 	int prio = 0;
 	int color = 0;
 };
 
 struct Cell {
+	// immutable
 	CellType type = CellType::kVoid;
 	bool has_neighbor[4] = {};
 	Route route[9];
+
+	// status
 	Car* current = nullptr;
 	std::array<Car*, 4> candidates;
+
+	// algo data
+	int sum_emission = 0;
 };
 
 struct Garage {
@@ -196,7 +202,10 @@ private:
 	const Route& getCarRoute(const Car& car);
 	Position getCarNextPos(const Car& car);
 	std::vector<Car*> garageFirsts();
+	std::vector<Car*> getTrail(const Position& pos);
+
 	int countCandidates(const Position& pos);
+	Direction bestCandidate(const Position& pos);
 
 	int size_ = 0;
 	int targets_ = 0;
@@ -382,6 +391,36 @@ std::vector<Car*> City::garageFirsts() {
 	return result;
 }
 
+std::vector<Car*> City::getTrail(const Position& pos0) {
+	std::vector<Car*> result;
+	Position pos = pos0;
+	while (true) {
+		auto& cell = getCell(pos);
+		if (!cell.current) {
+			break;
+		}
+
+		result.push_back(cell.current);
+
+		Direction prev = Direction::kNone;
+		int count = 0;
+		for (int i = 0; i < 4; ++i) {
+			if (cell.candidates[i]) {
+				++count;
+				prev = toDirection(i);
+			}
+		}
+
+		if (count != 1) {
+			break;
+		}
+
+		pos = neighbor(pos, prev);
+	}
+
+	return result;
+}
+
 int City::countCandidates(const Position& pos) {
 	auto& cell = getCell(pos);
 	int count = 0;
@@ -391,6 +430,27 @@ int City::countCandidates(const Position& pos) {
 		}
 	}
 	return count;
+}
+
+Direction City::bestCandidate(const Position& pos) {
+	auto& cell = getCell(pos);
+	int worst_emission = -1;
+	Direction best = Direction::kNone;
+
+	for (int i = 0; i < 4; ++i) {
+		auto car = cell.candidates[i];
+		auto prev = toDirection(i);
+		if (!car || car->prio < 0) {
+			continue;
+		}
+
+		auto emission = getCell(neighbor(pos, prev)).sum_emission;
+		if (emission > worst_emission) {
+			worst_emission = emission;
+			best = prev;
+		}
+	}
+	return best;
 }
 
 void City::solve() {
@@ -404,6 +464,7 @@ void City::solve() {
 		for (auto& cell : cells_) {
 			cell.current = nullptr;
 			cell.candidates.fill(nullptr);
+			cell.sum_emission = 0;
 		}
 
 		// update cars and cells
@@ -418,6 +479,9 @@ void City::solve() {
 			car->prio = 0;
 			car->color = 0;
 			car->next = next;
+
+			// Note: at this point, `next` is set, so `getCarNextPos()`
+			// will can be used.
 		}
 
 		// resolve circles
@@ -431,7 +495,9 @@ void City::solve() {
 				assert(car->color == 0);
 				car->color = 1;
 				while (true) {
-					car = getCell(getCarNextPos(*car)).current;
+					auto next_pos = getCarNextPos(*car);
+					car = getCell(next_pos).current;
+
 					if (!car || car->color == 2) {
 						// previous cars may still proceed here
 						break;
@@ -464,7 +530,7 @@ void City::solve() {
 				}
 
 				car = car0;
-				while (car->color == 1) {
+				while (car && car->color == 1) {
 					auto ec = cars.erase(car);
 					assert(ec == 1);
 					car->color = blocked ? 3 : 2;
@@ -472,28 +538,50 @@ void City::solve() {
 					car = getCell(getCarNextPos(*car)).current;
 				}
 			}
+
+			// Note: at this point, all cars are colored,
+			// and their prio is either -1, 0, or 10.
 		}
 
-		// resolve free conflicts
+		// resolve trails
 		{
+			// todo - discover emissions
+
 			std::set<Position> steps;
 			for (auto* car : movable_cars) {
-				steps.insert(car->pos);
+				if (car->prio == 0) {
+					auto pos = getCarNextPos(*car);
+					if (!getCell(pos).current) {
+						steps.insert(pos);
+					}
+				}
 			}
 
-			for (auto& pos : steps) {
-				if (countCandidates(pos) > 1) {
-					// calculate_trails()
+			while (!steps.empty()) {
+				auto it = steps.begin();
+				auto pos = *it;
+				steps.erase(it);
+				auto prev = bestCandidate(pos);
+				auto trail = getTrail(neighbor(pos, prev));
+
+				assert(prev != Direction::kNone);
+				assert(!trail.empty());
+				for (auto* car : trail) {
+					assert(car->prio == 0);
+					car->prio = 5;
+				}
+
+				auto last_pos = trail.back()->pos;
+				auto cc = countCandidates(last_pos);
+				if (cc > 0) {
+					steps.insert(last_pos);
 				}
 			}
 		}
 
-		// move unobstructed cars
-		// - todo implement -
-
 		// create commands
 		for (auto* car : movable_cars) {
-			if (car->prio == 0) {
+			if (car->prio <= 0) {
 				continue;
 			}
 			if (car->status == CarStatus::kInGarage) {
