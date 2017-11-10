@@ -462,6 +462,14 @@ void City::rebalance() {
 	constexpr float back_weight = 1.5;
 
 	for (auto& cell : cells_) {
+		if (std::all_of(
+				cell.flow_count, cell.flow_count + 4,
+				[&cell](int i){return i == cell.flow_count[0];})) {
+			for (int i = 0; i < 4; ++i) {
+				cell.flow_weight[i] =forw_weight;
+			}
+			continue;
+		}
 		auto forw = std::max_element(cell.flow_count, cell.flow_count + 4) -
 			cell.flow_count;
 		auto back = fromDirection(opposite(toDirection(forw)));
