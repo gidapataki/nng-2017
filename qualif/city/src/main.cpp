@@ -408,7 +408,6 @@ private:
 	std::vector<Garage> garages_;
 };
 
-
 void City::fromStream(std::istream& stream) {
 	stream >> size_;
 	cells_ = matrix<Cell>(size_, size_);
@@ -458,15 +457,19 @@ void City::preprocess() {
 }
 
 void City::rebalance() {
+	constexpr float forw_weight = 0.7;
+	constexpr float side_weight = 1.25;
+	constexpr float back_weight = 1.5;
+
 	for (auto& cell : cells_) {
 		auto forw = std::max_element(cell.flow_count, cell.flow_count + 4) -
 			cell.flow_count;
 		auto back = fromDirection(opposite(toDirection(forw)));
 		for (int i = 0; i < 4; ++i) {
-			cell.flow_weight[i] = 1.125; // side
+			cell.flow_weight[i] = side_weight;
 		}
-		cell.flow_weight[forw] = 0.7071067811865476;
-		cell.flow_weight[back] = 1.4142135623730951;
+		cell.flow_weight[forw] = forw_weight;
+		cell.flow_weight[back] = back_weight;
 	}
 }
 
