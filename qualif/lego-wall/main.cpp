@@ -17,19 +17,20 @@ int cache_query = 0;
 
 struct BrickBits {
     union {
-        uint64_t all_bits;
+        __uint64_t all_bits[2];
         struct {
+            bool ab;
+            bool bc;
+            bool cd;
+
             unsigned char type_counts[5];
 
-            unsigned char ones_end: 4;
-            unsigned char twos_end: 4;
-            unsigned char threes_end: 4;
-            unsigned char fours_end: 4;
-            unsigned char ab : 1;
-            unsigned char bc : 1;
-            unsigned char cd : 1;
+            unsigned char ones_end;
+            unsigned char twos_end;
+            unsigned char threes_end;
+            unsigned char fours_end;
 
-            unsigned char height : 5;
+            unsigned char height;
         };
     };
 
@@ -103,7 +104,12 @@ std::ostream& operator<<(std::ostream& os, const BrickBits& bb) {
 }
 
 bool operator==(const BrickBits& lhs, const BrickBits& rhs) {
-    return lhs.all_bits == rhs.all_bits;
+    for (int i = 0; i < sizeof(lhs.all_bits) / sizeof(lhs.all_bits[0]); ++i) {
+        if (lhs.all_bits[i] != rhs.all_bits[i]) {
+            return false;
+        }
+    }
+    return true;
 }
 
 bool operator!=(const BrickBits& lhs, const BrickBits& rhs) {
@@ -111,7 +117,7 @@ bool operator!=(const BrickBits& lhs, const BrickBits& rhs) {
 }
 
 std::size_t hash_value(const BrickBits& bricks) {
-    return bricks.all_bits;
+    return boost::hash_value(bricks.all_bits);
 }
 
 using SingleBricks = boost::container::static_vector<int, 5>;
@@ -367,7 +373,7 @@ std::uint64_t doTheThing(int height, Bricks bricks) {
 }
 
 int main(int argc, char** argv) {
-    static_assert(sizeof(BrickBits) == sizeof(uint64_t), "");
+    static_assert(sizeof(BrickBits) == 2*sizeof(uint64_t), "");
     auto* in_ptr = &std::cin;
     std::ifstream in_file;
     if (argc == 2) {
