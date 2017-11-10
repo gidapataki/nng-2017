@@ -387,7 +387,8 @@ private:
 	Position getCarNextPos(const Car& car);
 	std::vector<Car*> garageFirsts();
 	std::vector<Car*> getTrail(const Position& pos);
-
+	void calculateIdleEmissions();
+	void calculateEmissions(const Position& pos);
 	int countCandidates(const Position& pos);
 	Direction bestCandidate(const Position& pos);
 
@@ -637,6 +638,49 @@ Direction City::bestCandidate(const Position& pos) {
 	return best;
 }
 
+void City::calculateIdleEmissions() {
+	for (auto& garage : garages_) {
+		auto emission = 0;
+		for (auto* car : garage.cars) {
+			emission += car->emission;
+		}
+		if (!garage.cars.empty()) {
+			emission -= garage.cars.front()->emission;
+		}
+		getCell(garage.pos).sum_emission = emission;
+	}
+}
+
+void City::calculateEmissions(const Position& pos0) {
+	// Note: this wont work for circles
+	std::deque<Position> routes;
+	std::deque<Car*> cars;
+
+	routes.push_back(pos0);
+	while (!routes.empty()) {
+		auto pos = routes.front();
+		routes.pop_front();
+		auto* car = getCell(pos).current;
+		if (car) {
+			cars.push_front(car);
+		}
+
+		for (int i = 0; i < 4; ++i) {
+			auto prev = toDirection(i);
+			if (getCandidate(pos, prev)) {
+				routes.push_back(neighbor(pos, prev));
+			}
+		}
+	}
+
+	for (auto* car : cars) {
+		auto& cell = getCell(car->pos);
+		auto& next_cell = getCell(getCarNextPos(*car));
+		cell.sum_emission += car->emission;
+		next_cell.sum_emission += cell.sum_emission;
+	}
+}
+
 void City::solve() {
 	using Commands = std::vector<std::pair<int, Direction>>;
 	std::vector<Car*> driving;
@@ -667,6 +711,8 @@ void City::solve() {
 			// Note: at this point, `next` is set, so `getCarNextPos()`
 			// will can be used.
 		}
+
+		calculateIdleEmissions();
 
 		// resolve circles
 		{
@@ -729,8 +775,6 @@ void City::solve() {
 
 		// resolve trails
 		{
-			// todo - discover emissions
-
 			std::set<Position> steps;
 			for (auto* car : movable_cars) {
 				if (car->prio == 0) {
@@ -739,6 +783,10 @@ void City::solve() {
 						steps.insert(pos);
 					}
 				}
+			}
+
+			for (auto& pos : steps) {
+				calculateEmissions(pos);
 			}
 
 			while (!steps.empty()) {
