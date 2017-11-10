@@ -397,6 +397,8 @@ private:
 	void calculateEmissions(const Position& pos);
 	int countCandidates(const Position& pos);
 	Direction bestCandidate(const Position& pos);
+	void rebalance();
+	void preprocess();
 
 	int size_ = 0;
 	int targets_ = 0;
@@ -439,11 +441,32 @@ void City::fromStream(std::istream& stream) {
 		garages_[g].cars.push_back(&cars_[i]);
 	}
 
-	initFlow();
+	preprocess();
+}
+
+void City::preprocess() {
 	initWeights();
 	createGraph();
-	for (int i = 0; i < targets_; ++i) {
-		createRoute(i);
+
+	for (int q = 0; q < 2; ++q) {
+		initFlow();
+		for (int i = 0; i < targets_; ++i) {
+			createRoute(i);
+		}
+		rebalance();
+	}
+}
+
+void City::rebalance() {
+	for (auto& cell : cells_) {
+		auto forw = std::max_element(cell.flow_count, cell.flow_count + 4) -
+			cell.flow_count;
+		auto back = fromDirection(opposite(toDirection(forw)));
+		for (int i = 0; i < 4; ++i) {
+			cell.flow_weight[i] = 1.125; // side
+		}
+		cell.flow_weight[forw] = 0.7071067811865476;
+		cell.flow_weight[back] = 1.4142135623730951;
 	}
 }
 
@@ -572,6 +595,13 @@ void City::createRoute(int target) {
 			}
 		});
 		getRoute(sp, target) = Route{dst, next};
+
+		auto p = sp;
+		while (p != target_pos_[target]) {
+			auto dir = getRoute(p, target).next;
+			getCell(p).flow_count[fromDirection(dir)] += 1;
+			p = neighbor(p, dir);
+		}
 	}
 }
 
