@@ -4,5 +4,5 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_executable(city
-    src/main.cpp
+    src/main2.cpp
 )
