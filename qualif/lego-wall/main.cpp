@@ -177,6 +177,7 @@ std::unordered_map<BrickBits, std::uint64_t> bits_cache;
 
 auto memoize(std::uint64_t (*f)(BrickBits arg)) {
     return [f](BrickBits arg) mutable {
+        arg.Normalize();
 #ifdef CACHE_STATS
         ++cache_query;
 #endif
@@ -200,8 +201,6 @@ std::uint64_t EveryBits4(BrickBits bits) {
     if (bits.height == 0) {
         return (bits.ab & bits.bc & bits.cd) != 0;
     }
-
-    bits.Normalize();
 
     int ones_end = bits.ones_end;
     int twos_end = bits.twos_end;
