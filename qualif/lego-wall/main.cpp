@@ -260,14 +260,12 @@ std::uint64_t EveryBits4(BrickBits bits) {
     }
 
     // 2a - 2a
-    for (int a = ones_end; a < twos_end; ++a) {
-        if (bits.type_counts[a] >= 2) {
-            auto bb = bits;
-            bb.type_counts[a] -= 2;
-            bb.ab = true;
-            bb.cd = true;
-            result += memoizedEveryBits4(bb);
-        }
+    for (int a = ones_end; a < twos_end && bits.type_counts[a] >= 2; ++a) {
+        auto bb = bits;
+        bb.type_counts[a] -= 2;
+        bb.ab = true;
+        bb.cd = true;
+        result += memoizedEveryBits4(bb);
     }
 
     // 2a - 2b
@@ -285,27 +283,25 @@ std::uint64_t EveryBits4(BrickBits bits) {
     // 1a - 1a - 2b
     // 1a - 2b - 1a
     // 2b - 1a - 1a
-    for (int a = 0; a < ones_end; ++a) {
+    for (int a = 0; a < ones_end && bits.type_counts[a] >= 2; ++a) {
         for (int b = ones_end; b < twos_end; ++b) {
-            if (bits.type_counts[a] >= 2) {
-                auto bb = bits;
-                bb.type_counts[a] -= 2;
-                bb.type_counts[b] -= 1;
-                {
-                    auto bb2 = bb;
-                    bb2.ab = true;
-                    result += memoizedEveryBits4(bb2);
-                }
-                {
-                    auto bb2 = bb;
-                    bb2.bc = true;
-                    result += memoizedEveryBits4(bb2);
-                }
-                {
-                    auto bb2 = bb;
-                    bb2.cd = true;
-                    result += memoizedEveryBits4(bb2);
-                }
+            auto bb = bits;
+            bb.type_counts[a] -= 2;
+            bb.type_counts[b] -= 1;
+            {
+                auto bb2 = bb;
+                bb2.ab = true;
+                result += memoizedEveryBits4(bb2);
+            }
+            {
+                auto bb2 = bb;
+                bb2.bc = true;
+                result += memoizedEveryBits4(bb2);
+            }
+            {
+                auto bb2 = bb;
+                bb2.cd = true;
+                result += memoizedEveryBits4(bb2);
             }
         }
     }
