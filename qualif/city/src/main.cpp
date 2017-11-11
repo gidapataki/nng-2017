@@ -10,6 +10,7 @@
 #include <functional>
 #include <algorithm>
 #include <stdexcept>
+#include <boost/lexical_cast.hpp>
 
 
 // matrix.hpp
@@ -457,9 +458,18 @@ void City::preprocess() {
 }
 
 void City::rebalance() {
-	constexpr float forw_weight = 0.7;
-	constexpr float side_weight = 1.25;
-	constexpr float back_weight = 1.5;
+	float forw_weight = 0.7;
+	if (const char* value = std::getenv("CITY_FORWARD_WEIGHT")) {
+		forw_weight = boost::lexical_cast<float>(value);
+	}
+	float side_weight = 1.25;
+	if (const char* value = std::getenv("CITY_SIDE_WEIGHT")) {
+		side_weight = boost::lexical_cast<float>(value);
+	}
+	float back_weight = 1.5;
+	if (const char* value = std::getenv("CITY_BACK_WEIGHT")) {
+		back_weight = boost::lexical_cast<float>(value);
+	}
 
 	for (auto& cell : cells_) {
 		if (std::all_of(
