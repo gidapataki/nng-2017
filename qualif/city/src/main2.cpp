@@ -579,7 +579,7 @@ void City::calculatePath(Car* car) {
 	bool found = false;
 
 	while (!found) {
-		queue = {};
+		queue = Queue();
 		steps.clear();
 		queue.push({dst0, 0, -1, Direction::kNone, pos0});
 

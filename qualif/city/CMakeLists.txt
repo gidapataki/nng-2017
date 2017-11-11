@@ -6,3 +6,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_executable(city
     src/main2.cpp
 )
+
+add_executable(city0
+    src/main.cpp
+)
