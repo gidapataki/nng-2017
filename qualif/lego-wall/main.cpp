@@ -203,29 +203,34 @@ std::uint64_t EveryBits4(BrickBits bits) {
 
     bits.Normalize();
 
+    int ones_end = bits.ones_end;
+    int twos_end = bits.twos_end;
+    int threes_end = bits.threes_end;
+    int fours_end = bits.fours_end;
+
     // we only have ones, and still have a hole
-    if (bits.ones_end == bits.fours_end) {
+    if (ones_end == fours_end) {
         if (!bits.ab || !bits.bc || !bits.cd) {
             return 0;
         }
     }
 
     // we only have twos, and still have a hole in the middle
-    if (bits.ones_end == 0 && bits.twos_end == bits.fours_end) {
+    if (ones_end == 0 && twos_end == fours_end) {
         if (!bits.bc) {
             return 0;
         }
     }
 
     // we only have threes
-    if (bits.ones_end == 0 && bits.twos_end == 0 && bits.threes_end == bits.fours_end) {
+    if (ones_end == 0 && twos_end == 0 && threes_end == fours_end) {
         return 0;
     }
 
     std::uint64_t result = 0;
 
     // 4
-    for (int a = bits.threes_end; a < bits.fours_end; ++a) {
+    for (int a = threes_end; a < fours_end; ++a) {
         auto bb = bits;
         bb.type_counts[a] -= 1;
         bb.ab = true;
@@ -235,8 +240,8 @@ std::uint64_t EveryBits4(BrickBits bits) {
     }
 
     // 1 - 3
-    for (int a = 0; a < bits.ones_end; ++a) {
-        for (int b = bits.twos_end; b < bits.threes_end; ++b) {
+    for (int a = 0; a < ones_end; ++a) {
+        for (int b = twos_end; b < threes_end; ++b) {
             auto bb = bits;
             bb.type_counts[a] -= 1;
             bb.type_counts[b] -= 1;
@@ -255,7 +260,7 @@ std::uint64_t EveryBits4(BrickBits bits) {
     }
 
     // 2a - 2a
-    for (int a = bits.ones_end; a < bits.twos_end; ++a) {
+    for (int a = ones_end; a < twos_end; ++a) {
         if (bits.type_counts[a] >= 2) {
             auto bb = bits;
             bb.type_counts[a] -= 2;
@@ -266,8 +271,8 @@ std::uint64_t EveryBits4(BrickBits bits) {
     }
 
     // 2a - 2b
-    for (int a = bits.ones_end; a < bits.twos_end; ++a) {
-        for (int b = a+1; b < bits.twos_end; ++b) {
+    for (int a = ones_end; a < twos_end; ++a) {
+        for (int b = a+1; b < twos_end; ++b) {
             auto bb = bits;
             bb.type_counts[a] -= 1;
             bb.type_counts[b] -= 1;
@@ -280,8 +285,8 @@ std::uint64_t EveryBits4(BrickBits bits) {
     // 1a - 1a - 2b
     // 1a - 2b - 1a
     // 2b - 1a - 1a
-    for (int a = 0; a < bits.ones_end; ++a) {
-        for (int b = bits.ones_end; b < bits.twos_end; ++b) {
+    for (int a = 0; a < ones_end; ++a) {
+        for (int b = ones_end; b < twos_end; ++b) {
             if (bits.type_counts[a] >= 2) {
                 auto bb = bits;
                 bb.type_counts[a] -= 2;
@@ -311,9 +316,9 @@ std::uint64_t EveryBits4(BrickBits bits) {
     // 1b - 2b - 1b
     // 2c - 1a - 1b
     // 2c - 1b - 1a
-    for (int a = 0; a < bits.ones_end; ++a) {
-        for (int b = a+1; b < bits.ones_end; ++b) {
-            for (int c = bits.ones_end; c < bits.twos_end; ++c) {
+    for (int a = 0; a < ones_end; ++a) {
+        for (int b = a+1; b < ones_end; ++b) {
+            for (int c = ones_end; c < twos_end; ++c) {
                 auto bb = bits;
                 bb.type_counts[a] -= 1;
                 bb.type_counts[b] -= 1;
@@ -337,15 +342,15 @@ std::uint64_t EveryBits4(BrickBits bits) {
         }
     }
 
-    for (int a = 0; a < bits.ones_end; ++a) {
+    for (int a = 0; a < ones_end; ++a) {
         bits.type_counts[a] -= 1;
-        for (int b = 0; b < bits.ones_end; ++b) {
+        for (int b = 0; b < ones_end; ++b) {
             if (bits.type_counts[b] == 0) { continue; }
             bits.type_counts[b] -= 1;
-            for (int c = 0; c < bits.ones_end; ++c) {
+            for (int c = 0; c < ones_end; ++c) {
                 if (bits.type_counts[c] == 0) { continue; }
                 bits.type_counts[c] -= 1;
-                for (int d = 0; d < bits.ones_end; ++d) {
+                for (int d = 0; d < ones_end; ++d) {
                     if (bits.type_counts[d] == 0) { continue; }
                     bits.type_counts[d] -= 1;
                     result += memoizedEveryBits4(bits);
