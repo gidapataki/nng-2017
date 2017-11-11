@@ -361,6 +361,18 @@ std::uint64_t EveryBits4(BrickBits bits) {
 }
 
 std::uint64_t doTheThing(int height, Bricks bricks) {
+    // check if there is even enough bricks to make a wall tall enough
+    int area = 0;
+    for (int i = 0; i < bricks.bricks.size(); ++i) {
+        for (int j = 0; j < bricks.bricks[i].size(); ++j) {
+            area += (i+1) * bricks.bricks[i][j];
+        }
+    }
+
+    if (area < 4*height) {
+        return 0;
+    }
+
     auto bits = BitsFromBricks(bricks);
     bits.height = height + 1;
     return memoizedEveryBits4(bits);
