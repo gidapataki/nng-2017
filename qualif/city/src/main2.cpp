@@ -382,7 +382,7 @@ public:
 	void fromStream(std::istream& stream);
 	void solve();
 
-	bool calculatePath(Car* car);
+	bool calculatePath(Car* car, int n);
 
 private:
 	bool isOccupied(const Position& pos, int tick);
@@ -577,7 +577,7 @@ struct RouteCompare {
 	}
 };
 
-bool City::calculatePath(Car* car) {
+bool City::calculatePath(Car* car, int n) {
 	Position pos0 = car->pos;
 	int target = car->target;
 
@@ -623,7 +623,7 @@ bool City::calculatePath(Car* car) {
 				break;
 			}
 
-			if (steps.size() > 1000 ||
+			if (steps.size() > 5000 ||
 				dst + dtick > dst0 * 1.25 + 5)
 			{
 				break;
@@ -684,6 +684,14 @@ bool City::calculatePath(Car* car) {
 			setOccupied(pos, tick);
 			++tick;
 		}
+
+#if 0
+		// sawtooth
+		if (n < cars_.size() / 2) {
+			setOccupied(pos0, tick0 + 1);
+		}
+#endif
+
 	}
 
 #if 0
@@ -750,7 +758,7 @@ void City::solve() {
 			while (!garage.cars.empty() && trail > 0) {
 				auto* car = garage.cars.front();
 
-				if (calculatePath(car)) {
+				if (calculatePath(car, count)) {
 					++count;
 					// std::cerr << "-- " << count << "--" << std::endl;
 					garage.cars.pop_front();
