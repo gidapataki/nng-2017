@@ -262,6 +262,15 @@ struct Move {
 	Direction dir = Direction::kNone;
 };
 
+struct Route {
+	int dst = 0;
+	int delta_tick = 0;
+	int prev = 0;
+
+	Direction dir;
+	Position pos;
+};
+
 int fromDirection(Direction dir) {
 	int d = int(dir);
 	assert(d >= 0 && d < 4);
@@ -376,6 +385,8 @@ public:
 	void solve();
 
 private:
+	using RouteCompare = std::function<bool(const Route&, const Route&)>;
+
 	struct Solution {
 		matrix<CellData> data;
 		std::vector<std::vector<Move>> tick_moves;
@@ -384,21 +395,8 @@ private:
 
 	struct Args {
 		int steps_limit = 0;
-	};
-
-	struct Route {
-		int dst = 0;
-		int delta_tick = 0;
-		int prev = 0;
-
-		Direction dir;
-		Position pos;
-
-		const Args* args = nullptr;
-	};
-
-	struct RouteCompare {
-		bool operator()(const Route& lhs, const Route& rhs) const;
+		int color_limit = 0;
+		RouteCompare compare;
 	};
 
 	void initSolution(Solution& sol);
@@ -599,8 +597,8 @@ void City::calculateDistances() {
 	}
 }
 
-bool City::RouteCompare::operator()(const Route& lhs, const Route& rhs) const {
-	auto& args = *lhs.args;
+
+bool convergeRoutes(const Route& lhs, const Route& rhs) {
 	auto lw0 = lhs.dst / 2;
 	auto rw0 = rhs.dst / 2;
 	auto lw1 = lhs.prev;
@@ -611,16 +609,24 @@ bool City::RouteCompare::operator()(const Route& lhs, const Route& rhs) const {
 		std::tie(rw0, rhs.delta_tick, rw1, rhs.dir, rhs.pos);
 }
 
+bool smallestTick(const Route& lhs, const Route& rhs) {
+	return
+		std::tie(lhs.delta_tick, lhs.dst) >
+		std::tie(rhs.delta_tick, rhs.dst);
+}
+
 void City::calculatePath(Solution& sol, const Args& args, Car* car) {
 	Position pos0 = car->pos;
 	int target = car->target;
 
 	using Key = Route;
-	using Queue = std::priority_queue<Key, std::vector<Key>, RouteCompare>;
+	using KeyCompare = RouteCompare;
+	using Queue = std::priority_queue<Key, std::vector<Key>, KeyCompare>;
 	using Step = std::pair<int, Direction>;
 
 	Queue queue;
 	std::vector<Step> steps;
+
 	auto tp = target_pos_[target];
 	int tick0 = 0;
 
@@ -633,10 +639,12 @@ void City::calculatePath(Solution& sol, const Args& args, Car* car) {
 	bool debug = false;
 	bool found = false;
 
+	int color_limit = args.color_limit;
 	while (!found) {
-		queue = Queue();
+		queue = Queue(args.compare);
 		steps.clear();
-		queue.push({dst0, 0, -1, Direction::kNone, pos0, &args});
+		queue.push({dst0, 0, -1, Direction::kNone, pos0});
+		matrix<int> colors(size_, size_);
 
 		while (!queue.empty()) {
 			auto route = queue.top();
@@ -648,8 +656,13 @@ void City::calculatePath(Solution& sol, const Args& args, Car* car) {
 			auto tick = tick0 + route.delta_tick;
 			queue.pop();
 
+			if ((colors(pos.row, pos.col) += 1) > color_limit) {
+				continue;
+			}
+
 			int current = steps.size();
 			steps.push_back({prev, dir});
+			// std::cerr << current << pos << "  " << toCommand(dir) << std::endl;
 
 			if (dst == 1 && !isOccupied(sol, tp, tick + 1)) {
 				steps.push_back({current, getDirection(pos, tp)});
@@ -661,16 +674,10 @@ void City::calculatePath(Solution& sol, const Args& args, Car* car) {
 				break;
 			}
 
-#if 0
-			if (dst + dtick > dst0 * 1.25 + 5) {
-				break;
-			}
-#endif
-
 			if (!isOccupied(sol, pos, tick + 1)) {
 				queue.push({
 					dst, dtick + 1,
-					current, Direction::kNone, pos, &args});
+					current, Direction::kNone, pos});
 			}
 
 			for (auto nb : getNeighbors(pos)) {
@@ -680,7 +687,7 @@ void City::calculatePath(Solution& sol, const Args& args, Car* car) {
 				auto ndst = getDistance(nb.pos, target);
 				queue.push({
 					ndst, dtick + 1,
-					current, nb.dir, nb.pos, &args});
+					current, nb.dir, nb.pos});
 			}
 		}
 
@@ -714,14 +721,6 @@ void City::calculatePath(Solution& sol, const Args& args, Car* car) {
 			setOccupied(sol, pos, tick);
 			++tick;
 		}
-
-#if 0
-		// sawtooth
-		if (n < cars_.size() / 2) {
-			setOccupied(pos0, tick0 + 1);
-		}
-#endif
-
 	}
 
 	{
@@ -759,20 +758,27 @@ void City::solve() {
 	{
 		Args args;
 		args.steps_limit = 1000;
+		args.color_limit = 10000;
+		args.compare = convergeRoutes;
 		args_vec.push_back(args);
 	}
-
+#if 1
 	{
 		Args args;
-		args.steps_limit = 2000;
+		args.steps_limit = 100000;
+		args.color_limit = 3;
+		args.compare = smallestTick;
 		args_vec.push_back(args);
 	}
+#endif
 
+#if 0
 	{
 		Args args;
 		args.steps_limit = 4000;
 		args_vec.push_back(args);
 	}
+#endif
 
 	sol_vec.clear();
 
@@ -807,6 +813,7 @@ void City::solve() {
 				calculatePath(sol_vec.back(), args, car);
 				garage.cars.pop_front();
 				++count;
+				// std::cerr << "C " << count << std::endl;
 			}
 		}
 	}
