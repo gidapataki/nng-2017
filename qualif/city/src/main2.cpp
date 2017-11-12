@@ -764,13 +764,23 @@ void City::solve() {
 	{
 		Args args;
 		args.steps_limit = 1000;
-		args.color_limit = 10000;
+		args.color_limit = 16;
 		args.compare = convergeRoutes;
 		args_vec.push_back(args);
 	}
 #endif
 
 #if 1
+	{
+		Args args;
+		args.steps_limit = 2000;
+		args.color_limit = 12;
+		args.compare = convergeRoutes;
+		args_vec.push_back(args);
+	}
+#endif
+
+#if 0
 	{
 		Args args;
 		args.steps_limit = 100000;
