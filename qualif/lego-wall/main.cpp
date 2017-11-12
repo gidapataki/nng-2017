@@ -83,6 +83,13 @@ void BrickBits::Normalize() {
 
     CopyCounts(old_threes_end, fours_end, threes_end);
     fours_end -= old_threes_end - threes_end;
+
+    auto remaining_area = height*4;
+    // discard excess bricks
+    for (int i = 0; i<ones_end; ++i) { type_counts[i] = std::min(static_cast<int>(type_counts[i]), remaining_area); };
+    for (int i = ones_end; i<twos_end; ++i) { type_counts[i] = std::min(static_cast<int>(type_counts[i]), remaining_area/2); };
+    for (int i = twos_end; i<threes_end; ++i) { type_counts[i] = std::min(static_cast<int>(type_counts[i]), remaining_area/3); };
+    for (int i = threes_end; i<fours_end; ++i) { type_counts[i] = std::min(static_cast<int>(type_counts[i]), remaining_area/4); };
 }
 
 std::ostream& operator<<(std::ostream& os, const BrickBits& bb) {
