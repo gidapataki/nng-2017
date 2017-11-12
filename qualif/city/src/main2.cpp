@@ -568,12 +568,14 @@ void City::calculateDistances() {
 
 struct RouteCompare {
 	bool operator()(const Route& lhs, const Route& rhs) const {
-		auto lw0 = (lhs.dst / 4) * 10 + lhs.delta_tick;
-		auto rw0 = (rhs.dst / 4) * 10 + rhs.delta_tick;
+		auto lw0 = lhs.dst;//+ lhs.delta_tick;
+		auto rw0 = rhs.dst;//+ rhs.delta_tick;
+		auto lw1 = lhs.prev;
+		auto rw1 = rhs.prev;
 
 		return
-			std::tie(lw0) >
-			std::tie(rw0);
+			std::tie(lw0, lhs.delta_tick, lhs.dir, lw1, lhs.pos) >
+			std::tie(rw0, rhs.delta_tick, rhs.dir, rw1, rhs.pos);
 	}
 };
 
@@ -623,11 +625,15 @@ bool City::calculatePath(Car* car, int n) {
 				break;
 			}
 
-			if (steps.size() > 5000 ||
-				dst + dtick > dst0 * 1.25 + 5)
-			{
+			if (steps.size() > 1000) {
 				break;
 			}
+
+#if 0
+			if (dst + dtick > dst0 * 1.25 + 5) {
+				break;
+			}
+#endif
 
 			if (!isOccupied(pos, tick + 1)) {
 				queue.push({
