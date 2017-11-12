@@ -18,41 +18,32 @@ int cache_miss = 0;
 int cache_query = 0;
 #endif
 
+const size_t LA_size = (1 << 28);
+std::unique_ptr<char> LA_data;
+char* LA_current = nullptr;
+
 template <class T>
 struct LinearAllocator {
-    typedef T value_type;
-    LinearAllocator()
-        : data(new char[size])
-        , current(data.get())
-    {
-    }
-    template <class U> LinearAllocator(const LinearAllocator<U>&) noexcept
-        : data(new char[size])
-        , current(data.get())
-    {
-    }
-
-    ~LinearAllocator() {
-    }
+    using value_type = T;
+    LinearAllocator() {}
+    template <class U> LinearAllocator(const LinearAllocator<U>&) noexcept {}
 
     T* allocate(std::size_t n) {
         // align to 8
-        current += (8 - (reinterpret_cast<uintptr_t>(current) & 7));
-        void* ret = current;
-        current += n * sizeof(T);
+        LA_current += (8 - (reinterpret_cast<uintptr_t>(LA_current) & 7));
+        void* ret = LA_current;
+        LA_current += n * sizeof(T);
+        assert(LA_current < LA_data.get() + LA_size);
         return static_cast<T*>(ret);
     }
-    void deallocate(T* p, std::size_t) noexcept { /* leak */ }
 
-    const size_t size = (1 << 26);
-    std::unique_ptr<char[]> data;
-    char* current = nullptr;
+    void deallocate(T* p, std::size_t) noexcept { /* leak */ }
 };
 
 template <class T, class U>
-bool operator==(const LinearAllocator<T>&, const LinearAllocator<U>&) { return false; }
+bool operator==(const LinearAllocator<T>&, const LinearAllocator<U>&) { return true; }
 template <class T, class U>
-bool operator!=(const LinearAllocator<T>&, const LinearAllocator<U>&) { return true; }
+bool operator!=(const LinearAllocator<T>&, const LinearAllocator<U>&) { return false; }
 
 struct BrickBits {
     union {
@@ -506,6 +497,9 @@ int main(int argc, char** argv) {
     in >> test_count;
 
     for (int i = 0; i < test_count; ++i) {
+        bits_cache = nullptr;
+        LA_data.reset(new char[LA_size]);
+        LA_current = LA_data.get();
         bits_cache = std::make_unique<BitsCache>();
         bits_cache->rehash(2000000);
         int height, brick_type_count;
