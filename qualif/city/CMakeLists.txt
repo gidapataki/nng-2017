@@ -7,6 +7,10 @@ add_executable(city
     src/main2.cpp
 )
 
+target_compile_definitions(city PRIVATE
+    LOCAL_BUILD
+)
+
 add_executable(city0
     src/main.cpp
 )

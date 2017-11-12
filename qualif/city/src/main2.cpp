@@ -262,15 +262,6 @@ struct Move {
 	Direction dir = Direction::kNone;
 };
 
-struct Route {
-	int dst = 0;
-	int delta_tick = 0;
-	int prev = 0;
-
-	Direction dir;
-	Position pos;
-};
-
 int fromDirection(Direction dir) {
 	int d = int(dir);
 	assert(d >= 0 && d < 4);
@@ -391,12 +382,31 @@ private:
 		int sum_emission = 0;
 	};
 
+	struct Args {
+		int steps_limit = 0;
+	};
+
+	struct Route {
+		int dst = 0;
+		int delta_tick = 0;
+		int prev = 0;
+
+		Direction dir;
+		Position pos;
+
+		const Args* args = nullptr;
+	};
+
+	struct RouteCompare {
+		bool operator()(const Route& lhs, const Route& rhs) const;
+	};
+
 	void initSolution(Solution& sol);
 	void setOccupied(Solution& sol, const Position& pos, int tick);
 	bool isOccupied(Solution& sol, const Position& pos, int tick);
 	void addMove(Solution& sol, int tick, const Move& move);
 	void addEmission(Solution& sol, int emission);
-	bool calculatePath(Solution& sol, Car* car, int n);
+	void calculatePath(Solution& sol, const Args& args, Car* car);
 
 	bool isValid(const Position& pos);
 	void createGraph();
@@ -589,20 +599,19 @@ void City::calculateDistances() {
 	}
 }
 
-struct RouteCompare {
-	bool operator()(const Route& lhs, const Route& rhs) const {
-		auto lw0 = lhs.dst / 2;
-		auto rw0 = rhs.dst / 2;
-		auto lw1 = lhs.prev;
-		auto rw1 = rhs.prev;
+bool City::RouteCompare::operator()(const Route& lhs, const Route& rhs) const {
+	auto& args = *lhs.args;
+	auto lw0 = lhs.dst / 2;
+	auto rw0 = rhs.dst / 2;
+	auto lw1 = lhs.prev;
+	auto rw1 = rhs.prev;
 
-		return
-			std::tie(lw0, lhs.delta_tick, lw1, lhs.dir, lhs.pos) >
-			std::tie(rw0, rhs.delta_tick, rw1, rhs.dir, rhs.pos);
-	}
-};
+	return
+		std::tie(lw0, lhs.delta_tick, lw1, lhs.dir, lhs.pos) >
+		std::tie(rw0, rhs.delta_tick, rw1, rhs.dir, rhs.pos);
+}
 
-bool City::calculatePath(Solution& sol, Car* car, int n) {
+void City::calculatePath(Solution& sol, const Args& args, Car* car) {
 	Position pos0 = car->pos;
 	int target = car->target;
 
@@ -627,7 +636,7 @@ bool City::calculatePath(Solution& sol, Car* car, int n) {
 	while (!found) {
 		queue = Queue();
 		steps.clear();
-		queue.push({dst0, 0, -1, Direction::kNone, pos0});
+		queue.push({dst0, 0, -1, Direction::kNone, pos0, &args});
 
 		while (!queue.empty()) {
 			auto route = queue.top();
@@ -648,7 +657,7 @@ bool City::calculatePath(Solution& sol, Car* car, int n) {
 				break;
 			}
 
-			if (steps.size() > 4000) {
+			if (steps.size() > args.steps_limit) {
 				break;
 			}
 
@@ -661,7 +670,7 @@ bool City::calculatePath(Solution& sol, Car* car, int n) {
 			if (!isOccupied(sol, pos, tick + 1)) {
 				queue.push({
 					dst, dtick + 1,
-					current, Direction::kNone, pos});
+					current, Direction::kNone, pos, &args});
 			}
 
 			for (auto nb : getNeighbors(pos)) {
@@ -671,7 +680,7 @@ bool City::calculatePath(Solution& sol, Car* car, int n) {
 				auto ndst = getDistance(nb.pos, target);
 				queue.push({
 					ndst, dtick + 1,
-					current, nb.dir, nb.pos});
+					current, nb.dir, nb.pos, &args});
 			}
 		}
 
@@ -679,17 +688,10 @@ bool City::calculatePath(Solution& sol, Car* car, int n) {
 			setOccupied(sol, pos0, tick0);
 			++tick0;
 			++failed;
-#if 0
-			if (failed > 20) {
-				break;
-			}
-#endif
 		}
 	}
 
-	if (!found) {
-		return false;
-	}
+	assert(found && "Invalid state");
 
 	std::vector<Direction> dirs;
 	{
@@ -735,8 +737,6 @@ bool City::calculatePath(Solution& sol, Car* car, int n) {
 		addEmission(sol, (tick0 + dticks - 1) * car->emission);
 	}
 
-	return true;
-
 #if 0
 	std::cerr << "D " << car->index << " " << steps.size();
 	for (auto dir : dirs) {
@@ -751,41 +751,73 @@ void City::solve() {
 	calculateDistances();
 	prepareCars();
 
-	int count = 0;
+	std::vector<Args> args_vec;
+	std::vector<Solution> sol_vec;
 	Solution sol;
 	initSolution(sol);
 
-	while (true) {
-		std::vector<Car*> cars;
+	{
+		Args args;
+		args.steps_limit = 1000;
+		args_vec.push_back(args);
+	}
 
-		for (auto& garage : garages_) {
-			if (!garage.cars.empty()) {
-				cars.push_back(garage.cars.front());
+	{
+		Args args;
+		args.steps_limit = 2000;
+		args_vec.push_back(args);
+	}
+
+	{
+		Args args;
+		args.steps_limit = 4000;
+		args_vec.push_back(args);
+	}
+
+	sol_vec.clear();
+
+	// try different approaches
+	for (auto& args : args_vec) {
+		int count = 0;
+		auto garages = garages_;
+		sol_vec.push_back(sol);
+
+		while (true) {
+			std::vector<Car*> cars;
+
+			for (auto& garage : garages) {
+				if (!garage.cars.empty()) {
+					cars.push_back(garage.cars.front());
+				}
 			}
-		}
 
-		if (cars.empty()) {
-			break;
-		}
+			if (cars.empty()) {
+				break;
+			}
 
-		std::sort(cars.begin(), cars.end(), [](Car* lhs, Car* rhs) {
-			auto l1 = -lhs->emission;
-			auto r1 = -rhs->emission;
-			auto l2 = 0; //-lhs->dst;
-			auto r2 = 0; //-rhs->dst;
+			std::sort(cars.begin(), cars.end(), [](Car* lhs, Car* rhs) {
+				auto l1 = -lhs->emission;
+				auto r1 = -rhs->emission;
+				return std::tie(l1) < std::tie(r1);
+			});
 
-			return std::tie(l1, l2) < std::tie(r1, r2);
-		});
 
-		for (auto* car : cars) {
-			auto& garage = garages_[car->origin];
-			if (calculatePath(sol, car, count)) {
-				++count;
-				// std::cerr << "-- " << count << "--" << std::endl;
+			for (auto* car : cars) {
+				auto& garage = garages[car->origin];
+				calculatePath(sol_vec.back(), args, car);
 				garage.cars.pop_front();
+				++count;
 			}
 		}
 	}
+
+	auto best = std::max_element(sol_vec.begin(), sol_vec.end(),
+		[](const Solution& lhs, const Solution& rhs) {
+			return lhs.sum_emission > rhs.sum_emission;
+		});
+
+	sol = *best;
+
 
 	for (auto& moves : sol.tick_moves) {
 		std::cout << moves.size() << std::endl;
@@ -795,7 +827,9 @@ void City::solve() {
 	}
 	std::cout << 0 << std::endl;
 
+#if LOCAL_BUILD
 	std::cerr << "E " << sol.sum_emission << std::endl;
+#endif
 }
 
 // Main ////////////////////////////////////////////////////////////////////////
