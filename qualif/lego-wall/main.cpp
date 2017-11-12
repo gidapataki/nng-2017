@@ -18,6 +18,42 @@ int cache_miss = 0;
 int cache_query = 0;
 #endif
 
+template <class T>
+struct LinearAllocator {
+    typedef T value_type;
+    LinearAllocator()
+        : data(new char[size])
+        , current(data.get())
+    {
+    }
+    template <class U> LinearAllocator(const LinearAllocator<U>&) noexcept
+        : data(new char[size])
+        , current(data.get())
+    {
+    }
+
+    ~LinearAllocator() {
+    }
+
+    T* allocate(std::size_t n) {
+        // align to 8
+        current += (8 - (reinterpret_cast<uintptr_t>(current) & 7));
+        void* ret = current;
+        current += n * sizeof(T);
+        return static_cast<T*>(ret);
+    }
+    void deallocate(T* p, std::size_t) noexcept { /* leak */ }
+
+    const size_t size = (1 << 26);
+    std::unique_ptr<char[]> data;
+    char* current = nullptr;
+};
+
+template <class T, class U>
+bool operator==(const LinearAllocator<T>&, const LinearAllocator<U>&) { return false; }
+template <class T, class U>
+bool operator!=(const LinearAllocator<T>&, const LinearAllocator<U>&) { return true; }
+
 struct BrickBits {
     union {
         uint64_t all_bits;
@@ -177,7 +213,16 @@ struct hash<BrickBits> {
 
 } // namespace std
 
-std::unordered_map<BrickBits, std::uint64_t> bits_cache;
+using BitsCache =
+    std::unordered_map<
+        BrickBits,
+        std::uint64_t,
+        std::hash<BrickBits>,
+        std::equal_to<BrickBits>,
+        LinearAllocator<std::pair<const BrickBits, std::uint64_t>>
+    >;
+
+std::unique_ptr<BitsCache> bits_cache;
 
 auto memoize(std::uint64_t (*f)(BrickBits arg)) {
     return [f](BrickBits arg) mutable {
@@ -185,9 +230,9 @@ auto memoize(std::uint64_t (*f)(BrickBits arg)) {
 #ifdef CACHE_STATS
         ++cache_query;
 #endif
-        auto it = bits_cache.find(arg);
-        if (it == end(bits_cache)) {
-            it = bits_cache.insert(std::make_pair(arg, f(arg))).first;
+        auto it = bits_cache->find(arg);
+        if (it == end(*bits_cache)) {
+            it = bits_cache->insert(std::make_pair(arg, f(arg))).first;
 #ifdef CACHE_STATS
             ++cache_miss;
 #endif
@@ -461,8 +506,8 @@ int main(int argc, char** argv) {
     in >> test_count;
 
     for (int i = 0; i < test_count; ++i) {
-        bits_cache.clear();
-        bits_cache.rehash(2000000);
+        bits_cache = std::make_unique<BitsCache>();
+        bits_cache->rehash(2000000);
         int height, brick_type_count;
         in >> height >> brick_type_count;
         Bricks bricks;
@@ -478,8 +523,8 @@ int main(int argc, char** argv) {
             << double(cache_miss) / cache_query * 100 << "%)" << std::endl;
         cache_miss = 0;
         cache_query = 0;
-        std::cout << "Map size = " << bits_cache.size() << std::endl;
-        std::cout << "Bucket count = " << bits_cache.bucket_count() << std::endl;
+        std::cout << "Map size = " << bits_cache->size() << std::endl;
+        std::cout << "Bucket count = " << bits_cache->bucket_count() << std::endl;
 #endif
     }
 }
