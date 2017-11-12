@@ -355,8 +355,8 @@ std::uint64_t EveryBits4(BrickBits bits) {
                 for (int d = 0; d < ones_end; ++d) {
                     if (bb3.type_counts[d] == 0) { continue; }
                     auto bb4 = bb3;
-                    bb3.type_counts[d] -= 1;
-                    result += memoizedEveryBits4(bb3);
+                    bb4.type_counts[d] -= 1;
+                    result += memoizedEveryBits4(bb4);
                 }
             }
         }
