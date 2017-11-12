@@ -342,24 +342,24 @@ std::uint64_t EveryBits4(BrickBits bits) {
     }
 
     for (int a = 0; a < ones_end; ++a) {
-        bits.type_counts[a] -= 1;
+        auto bb1 = bits;
+        bb1.type_counts[a] -= 1;
         for (int b = 0; b < ones_end; ++b) {
-            if (bits.type_counts[b] == 0) { continue; }
-            bits.type_counts[b] -= 1;
+            if (bb1.type_counts[b] == 0) { continue; }
+            auto bb2 = bb1;
+            bb2.type_counts[b] -= 1;
             for (int c = 0; c < ones_end; ++c) {
-                if (bits.type_counts[c] == 0) { continue; }
-                bits.type_counts[c] -= 1;
+                if (bb2.type_counts[c] == 0) { continue; }
+                auto bb3 = bb2;
+                bb3.type_counts[c] -= 1;
                 for (int d = 0; d < ones_end; ++d) {
-                    if (bits.type_counts[d] == 0) { continue; }
-                    bits.type_counts[d] -= 1;
-                    result += memoizedEveryBits4(bits);
-                    bits.type_counts[d] += 1;
+                    if (bb3.type_counts[d] == 0) { continue; }
+                    auto bb4 = bb3;
+                    bb3.type_counts[d] -= 1;
+                    result += memoizedEveryBits4(bb3);
                 }
-                bits.type_counts[c] += 1;
             }
-            bits.type_counts[b] += 1;
         }
-        bits.type_counts[a] += 1;
     }
     return result;
 }
