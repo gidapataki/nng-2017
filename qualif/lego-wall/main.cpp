@@ -41,17 +41,11 @@ struct BrickBits {
         assert(from_end >= from_start);
         assert(from_end <= 5);
         assert(from_start <= 5);
+        assert(to_start <= from_start);
+        assert(to_start + (from_end - from_start) <= 5);
 
-        auto length = from_end - from_start;
-
-        assert(to_start + length <= 5);
-
-        unsigned char buffer[5];
-        for (int i = from_start; i < from_end; ++i) {
-            buffer[i - from_start] = type_counts[i];
-        }
-        for (int i = to_start; i < to_start + length; ++i) {
-            type_counts[i] = buffer[i - to_start];
+        for (int f = from_start, t = to_start; f < from_end; ++f, ++t) {
+            type_counts[t] = type_counts[f];
         }
     }
 
