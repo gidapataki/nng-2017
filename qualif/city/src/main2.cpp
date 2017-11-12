@@ -400,6 +400,7 @@ private:
 
 	int size_ = 0;
 	int targets_ = 0;
+	int sum_emission_ = 0;
 	matrix<Cell> cells_;
 	std::vector<Position> target_pos_;
 	std::vector<Car> cars_;
@@ -727,6 +728,8 @@ bool City::calculatePath(Car* car, int n) {
 			}
 			addMove(d + tick0 - 1, {car->index, dir});
 		}
+
+		sum_emission_ += (tick0 + dticks - 1) * car->emission;
 	}
 
 	return true;
@@ -798,6 +801,8 @@ void City::solve() {
 		}
 	}
 	std::cout << 0 << std::endl;
+
+	std::cerr << "E " << sum_emission_ << std::endl;
 }
 
 // Main ////////////////////////////////////////////////////////////////////////
