@@ -230,6 +230,7 @@ struct Car {
 
 	// status
 	Position pos;
+	int dst = std::numeric_limits<int>::max();
 };
 
 struct Neighbor {
@@ -382,8 +383,6 @@ public:
 	void fromStream(std::istream& stream);
 	void solve();
 
-	bool calculatePath(Car* car, int n);
-
 private:
 	bool isOccupied(const Position& pos, int tick);
 	bool isValid(const Position& pos);
@@ -396,6 +395,8 @@ private:
 	Direction getDirection(const Position& lhs, const Position& rhs);
 	void addMove(int tick, const Move& move);
 	bool checkGarage(int line, int g);
+	bool calculatePath(Car* car, int n);
+	void prepareCars();
 
 	int size_ = 0;
 	int targets_ = 0;
@@ -433,8 +434,14 @@ void City::fromStream(std::istream& stream) {
 		int g, w, e;
 		stream >> g >> w >> e;
 		cars_[i] = Car(i, w, e, g);
-		cars_[i].pos = garages_[g].pos;
 		garages_[g].cars.push_back(&cars_[i]);
+	}
+}
+
+void City::prepareCars() {
+	for (auto& car : cars_) {
+		car.pos = garages_[car.origin].pos;
+		car.dst = getDistance(car.pos, car.target);
 	}
 }
 
@@ -625,7 +632,7 @@ bool City::calculatePath(Car* car, int n) {
 				break;
 			}
 
-			if (steps.size() > 1000) {
+			if (steps.size() > 4000) {
 				break;
 			}
 
@@ -664,7 +671,6 @@ bool City::calculatePath(Car* car, int n) {
 		}
 	}
 
-	// std::cerr << "F " << failed << std::endl;
 	if (!found) {
 		return false;
 	}
@@ -750,26 +756,37 @@ bool City::checkGarage(int line, int g) {
 void City::solve() {
 	createGraph();
 	calculateDistances();
+	prepareCars();
 
 	int count = 0;
-	bool has_cars = true;
-	while (has_cars) {
-		has_cars = false;
+	while (true) {
+		std::vector<Car*> cars;
+
 		for (auto& garage : garages_) {
 			if (!garage.cars.empty()) {
-				has_cars = true;
+				cars.push_back(garage.cars.front());
 			}
+		}
 
-			int trail = 1;
-			while (!garage.cars.empty() && trail > 0) {
-				auto* car = garage.cars.front();
+		if (cars.empty()) {
+			break;
+		}
 
-				if (calculatePath(car, count)) {
-					++count;
-					// std::cerr << "-- " << count << "--" << std::endl;
-					garage.cars.pop_front();
-				}
-				--trail;
+		std::sort(cars.begin(), cars.end(), [](Car* lhs, Car* rhs) {
+			auto l1 = -lhs->emission;
+			auto r1 = -rhs->emission;
+			auto l2 = 0; //-lhs->dst;
+			auto r2 = 0; //-rhs->dst;
+
+			return std::tie(l1, l2) < std::tie(r1, r2);
+		});
+
+		for (auto* car : cars) {
+			auto& garage = garages_[car->origin];
+			if (calculatePath(car, count)) {
+				++count;
+				// std::cerr << "-- " << count << "--" << std::endl;
+				garage.cars.pop_front();
 			}
 		}
 	}
