@@ -568,14 +568,14 @@ void City::calculateDistances() {
 
 struct RouteCompare {
 	bool operator()(const Route& lhs, const Route& rhs) const {
-		auto lw0 = lhs.dst;//+ lhs.delta_tick;
-		auto rw0 = rhs.dst;//+ rhs.delta_tick;
+		auto lw0 = lhs.dst / 2;
+		auto rw0 = rhs.dst / 2;
 		auto lw1 = lhs.prev;
 		auto rw1 = rhs.prev;
 
 		return
-			std::tie(lw0, lhs.delta_tick, lhs.dir, lw1, lhs.pos) >
-			std::tie(rw0, rhs.delta_tick, rhs.dir, rw1, rhs.pos);
+			std::tie(lw0, lhs.delta_tick, lw1, lhs.dir, lhs.pos) >
+			std::tie(rw0, rhs.delta_tick, rw1, rhs.dir, rhs.pos);
 	}
 };
 
