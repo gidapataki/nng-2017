@@ -260,6 +260,15 @@ struct Move {
 	Direction dir = Direction::kNone;
 };
 
+struct Route {
+	int dst = 0;
+	int delta_tick = 0;
+	int prev = 0;
+
+	Direction dir;
+	Position pos;
+};
+
 int fromDirection(Direction dir) {
 	int d = int(dir);
 	assert(d >= 0 && d < 4);
@@ -557,12 +566,23 @@ void City::calculateDistances() {
 	}
 }
 
+struct RouteCompare {
+	bool operator()(const Route& lhs, const Route& rhs) const {
+		auto lw0 = (lhs.dst / 4) * 10 + lhs.delta_tick;
+		auto rw0 = (rhs.dst / 4) * 10 + rhs.delta_tick;
+
+		return
+			std::tie(lw0) >
+			std::tie(rw0);
+	}
+};
+
 bool City::calculatePath(Car* car) {
 	Position pos0 = car->pos;
 	int target = car->target;
-	// Key = <distance, delta_tick, prev, dir, pos>
-	using Key = std::tuple<int, int, int, Direction, Position>;
-	using Queue = std::priority_queue<Key, std::vector<Key>, std::greater<Key>>;
+
+	using Key = Route;
+	using Queue = std::priority_queue<Key, std::vector<Key>, RouteCompare>;
 	using Step = std::pair<int, Direction>;
 
 	Queue queue;
@@ -585,13 +605,14 @@ bool City::calculatePath(Car* car) {
 		queue.push({dst0, 0, -1, Direction::kNone, pos0});
 
 		while (!queue.empty()) {
-			int tick = tick0;
-			int dst, dtick, prev;
-			Position pos;
-			Direction dir;
-			std::tie(dst, dtick, prev, dir, pos) = queue.top();
+			auto route = queue.top();
+			auto dst = route.dst;
+			auto dtick = route.delta_tick;
+			auto prev = route.prev;
+			auto pos = route.pos;
+			auto dir = route.dir;
+			auto tick = tick0 + route.delta_tick;
 			queue.pop();
-			tick += dtick;
 
 			int current = steps.size();
 			steps.push_back({prev, dir});
@@ -602,7 +623,9 @@ bool City::calculatePath(Car* car) {
 				break;
 			}
 
-			if (steps.size() > 50000 || dtick > dst0 * 1.25 + 5) {
+			if (steps.size() > 1000 ||
+				dst + dtick > dst0 * 1.25 + 5)
+			{
 				break;
 			}
 
@@ -719,16 +742,20 @@ void City::solve() {
 	while (has_cars) {
 		has_cars = false;
 		for (auto& garage : garages_) {
-			if (garage.cars.empty()) {
-				continue;
+			if (!garage.cars.empty()) {
+				has_cars = true;
 			}
-			has_cars = true;
-			auto* car = garage.cars.front();
 
-			if (calculatePath(car)) {
-				++count;
-				// std::cerr << "-- " << count << "--" << std::endl;
-				garage.cars.pop_front();
+			int trail = 1;
+			while (!garage.cars.empty() && trail > 0) {
+				auto* car = garage.cars.front();
+
+				if (calculatePath(car)) {
+					++count;
+					// std::cerr << "-- " << count << "--" << std::endl;
+					garage.cars.pop_front();
+				}
+				--trail;
 			}
 		}
 	}
