@@ -396,6 +396,7 @@ private:
 	struct Args {
 		int steps_limit = 0;
 		int color_limit = 0;
+		double tick_limit = 0;
 		RouteCompare compare;
 	};
 
@@ -674,6 +675,10 @@ void City::calculatePath(Solution& sol, const Args& args, Car* car) {
 				break;
 			}
 
+			if (args.tick_limit > 0 && dtick > 4 + args.tick_limit * dst0) {
+				break;
+			}
+
 			if (!isOccupied(sol, pos, tick + 1)) {
 				queue.push({
 					dst, dtick + 1,
@@ -755,6 +760,7 @@ void City::solve() {
 	Solution sol;
 	initSolution(sol);
 
+#if 1
 	{
 		Args args;
 		args.steps_limit = 1000;
@@ -762,20 +768,15 @@ void City::solve() {
 		args.compare = convergeRoutes;
 		args_vec.push_back(args);
 	}
+#endif
+
 #if 1
 	{
 		Args args;
 		args.steps_limit = 100000;
 		args.color_limit = 3;
+		args.tick_limit = 2;
 		args.compare = smallestTick;
-		args_vec.push_back(args);
-	}
-#endif
-
-#if 0
-	{
-		Args args;
-		args.steps_limit = 4000;
 		args_vec.push_back(args);
 	}
 #endif
