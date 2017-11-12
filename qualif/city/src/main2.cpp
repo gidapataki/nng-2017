@@ -772,10 +772,10 @@ void City::solve() {
 	}
 #endif
 
-#if 0
+#if 1
 	{
 		Args args;
-		args.steps_limit = 2000;
+		args.steps_limit = 1600;
 		args.color_limit = 12;
 		args.compare = convergeRoutes;
 		args_vec.push_back(args);
@@ -817,7 +817,9 @@ void City::solve() {
 			std::sort(cars.begin(), cars.end(), [](Car* lhs, Car* rhs) {
 				auto l1 = -lhs->emission;
 				auto r1 = -rhs->emission;
-				return std::tie(l1) < std::tie(r1);
+				return
+					std::tie(l1) <
+					std::tie(r1);
 			});
 
 
