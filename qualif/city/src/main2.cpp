@@ -373,7 +373,7 @@ public:
 	void fromStream(std::istream& stream);
 	void solve();
 
-	void calculatePath(Car* car);
+	bool calculatePath(Car* car);
 
 private:
 	bool isOccupied(const Position& pos, int tick);
@@ -557,7 +557,7 @@ void City::calculateDistances() {
 	}
 }
 
-void City::calculatePath(Car* car) {
+bool City::calculatePath(Car* car) {
 	Position pos0 = car->pos;
 	int target = car->target;
 	// Key = <distance, delta_tick, prev, dir, pos>
@@ -574,6 +574,7 @@ void City::calculatePath(Car* car) {
 		++tick0;
 	}
 
+	int failed = 0;
 	int dst0 = getDistance(pos0, target);
 	bool debug = false;
 	bool found = false;
@@ -601,8 +602,14 @@ void City::calculatePath(Car* car) {
 				break;
 			}
 
+			if (steps.size() > 50000 || dtick > dst0 * 1.25 + 5) {
+				break;
+			}
+
 			if (!isOccupied(pos, tick + 1)) {
-				queue.push({dst, dtick + 1, current, Direction::kNone, pos});
+				queue.push({
+					dst, dtick + 1,
+					current, Direction::kNone, pos});
 			}
 
 			for (auto nb : getNeighbors(pos)) {
@@ -610,18 +617,27 @@ void City::calculatePath(Car* car) {
 					continue;
 				}
 				auto ndst = getDistance(nb.pos, target);
-				queue.push({ndst, dtick + 1, current, nb.dir, nb.pos});
-			}
-
-			if (steps.size() > 1000) {
-				break;
+				queue.push({
+					ndst, dtick + 1,
+					current, nb.dir, nb.pos});
 			}
 		}
 
 		if (!found) {
 			setOccupied(pos0, tick0);
 			++tick0;
+			++failed;
+#if 0
+			if (failed > 20) {
+				break;
+			}
+#endif
 		}
+	}
+
+	// std::cerr << "F " << failed << std::endl;
+	if (!found) {
+		return false;
 	}
 
 	std::vector<Direction> dirs;
@@ -670,6 +686,8 @@ void City::calculatePath(Car* car) {
 		}
 	}
 
+	return true;
+
 #if 0
 	std::cerr << "D " << car->index << " " << steps.size();
 	for (auto dir : dirs) {
@@ -706,11 +724,12 @@ void City::solve() {
 			}
 			has_cars = true;
 			auto* car = garage.cars.front();
-			garage.cars.pop_front();
 
-			++count;
-			// std::cerr << count << std::endl;
-			calculatePath(car);
+			if (calculatePath(car)) {
+				++count;
+				// std::cerr << "-- " << count << "--" << std::endl;
+				garage.cars.pop_front();
+			}
 		}
 	}
 
