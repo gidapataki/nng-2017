@@ -58,24 +58,24 @@ struct BrickBits {
     union {
         uint64_t all_bits;
         struct {
-            unsigned char type_counts[5];
+            uint8_t type_counts[5];
 
-            unsigned char ones_end: 4;
-            unsigned char twos_end: 4;
-            unsigned char threes_end: 4;
-            unsigned char fours_end: 4;
-            unsigned char ab : 1;
-            unsigned char bc : 1;
-            unsigned char cd : 1;
+            uint8_t ones_end: 4;
+            uint8_t twos_end: 4;
+            uint8_t threes_end: 4;
+            uint8_t fours_end: 4;
+            uint8_t ab : 1;
+            uint8_t bc : 1;
+            uint8_t cd : 1;
 
-            unsigned char height : 5;
+            uint8_t height : 5;
         };
     };
 
     void CopyCounts(
-        unsigned char from_start,
-        unsigned char from_end,
-        unsigned char to_start)
+        uint8_t from_start,
+        uint8_t from_end,
+        uint8_t to_start)
     {
         assert(from_end >= from_start);
         assert(from_end <= 5);
@@ -92,10 +92,10 @@ struct BrickBits {
 };
 
 void BrickBits::Normalize() {
-    std::sort(type_counts + 0, type_counts + ones_end, std::greater<unsigned char>{});
-    std::sort(type_counts + ones_end, type_counts + twos_end, std::greater<unsigned char>{});
-    std::sort(type_counts + twos_end, type_counts + threes_end, std::greater<unsigned char>{});
-    std::sort(type_counts + threes_end, type_counts + fours_end, std::greater<unsigned char>{});
+    std::sort(type_counts + 0, type_counts + ones_end, std::greater<uint8_t>{});
+    std::sort(type_counts + ones_end, type_counts + twos_end, std::greater<uint8_t>{});
+    std::sort(type_counts + twos_end, type_counts + threes_end, std::greater<uint8_t>{});
+    std::sort(type_counts + threes_end, type_counts + fours_end, std::greater<uint8_t>{});
 
     auto old_ones_end = ones_end;
     auto old_twos_end = twos_end;
@@ -119,10 +119,10 @@ void BrickBits::Normalize() {
 
     auto remaining_area = height*4;
     // discard excess bricks
-    for (int i = 0; i<ones_end; ++i) { type_counts[i] = std::min(static_cast<int>(type_counts[i]), remaining_area); };
-    for (int i = ones_end; i<twos_end; ++i) { type_counts[i] = std::min(static_cast<int>(type_counts[i]), remaining_area/2); };
-    for (int i = twos_end; i<threes_end; ++i) { type_counts[i] = std::min(static_cast<int>(type_counts[i]), remaining_area/3); };
-    for (int i = threes_end; i<fours_end; ++i) { type_counts[i] = std::min(static_cast<int>(type_counts[i]), remaining_area/4); };
+    for (int i = 0; i<ones_end; ++i) { type_counts[i] = std::min(int(type_counts[i]), remaining_area); };
+    for (int i = ones_end; i<twos_end; ++i) { type_counts[i] = std::min(int(type_counts[i]), remaining_area/2); };
+    for (int i = twos_end; i<threes_end; ++i) { type_counts[i] = std::min(int(type_counts[i]), remaining_area/3); };
+    for (int i = threes_end; i<fours_end; ++i) { type_counts[i] = std::min(int(type_counts[i]), remaining_area/4); };
 }
 
 std::ostream& operator<<(std::ostream& os, const BrickBits& bb) {
