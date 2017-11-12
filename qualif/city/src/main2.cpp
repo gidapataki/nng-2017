@@ -604,10 +604,12 @@ bool convergeRoutes(const Route& lhs, const Route& rhs) {
 	auto rw0 = rhs.dst / 2;
 	auto lw1 = lhs.prev;
 	auto rw1 = rhs.prev;
+	auto lw2 = lhs.delta_tick;
+	auto rw2 = rhs.delta_tick;
 
 	return
-		std::tie(lw0, lhs.delta_tick, lw1, lhs.dir, lhs.pos) >
-		std::tie(rw0, rhs.delta_tick, rw1, rhs.dir, rhs.pos);
+		std::tie(lw0, lw2, lw1, lhs.dir, lhs.pos) >
+		std::tie(rw0, lw2, rw1, rhs.dir, rhs.pos);
 }
 
 bool smallestTick(const Route& lhs, const Route& rhs) {
@@ -763,14 +765,14 @@ void City::solve() {
 #if 1
 	{
 		Args args;
-		args.steps_limit = 1000;
-		args.color_limit = 16;
+		args.steps_limit = 990;
+		args.color_limit = 23;
 		args.compare = convergeRoutes;
 		args_vec.push_back(args);
 	}
 #endif
 
-#if 1
+#if 0
 	{
 		Args args;
 		args.steps_limit = 2000;
