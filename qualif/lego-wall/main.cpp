@@ -462,6 +462,7 @@ int main(int argc, char** argv) {
 
     for (int i = 0; i < test_count; ++i) {
         bits_cache.clear();
+        bits_cache.rehash(2000000);
         int height, brick_type_count;
         in >> height >> brick_type_count;
         Bricks bricks;
@@ -477,6 +478,8 @@ int main(int argc, char** argv) {
             << double(cache_miss) / cache_query * 100 << "%)" << std::endl;
         cache_miss = 0;
         cache_query = 0;
+        std::cout << "Map size = " << bits_cache.size() << std::endl;
+        std::cout << "Bucket count = " << bits_cache.bucket_count() << std::endl;
 #endif
     }
 }
