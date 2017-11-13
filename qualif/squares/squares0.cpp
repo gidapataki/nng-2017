@@ -1,10 +1,86 @@
 #include <cstdint>
 #include <iostream>
 #include <vector>
-#include <array>
 #include <cassert>
 #include <algorithm>
 
+#if DEBUG_MEMORY
+
+#if __APPLE__
+	#include <malloc/malloc.h>
+#else
+	#include <malloc.h>
+#endif
+
+size_t AllocSize(void* p) {
+	if (!p) {
+		return 0;
+	}
+#if __APPLE__
+	return malloc_size(p) + 8;
+#else
+	return malloc_usable_size(p) + 8;
+#endif
+	return 0;
+}
+
+size_t g_AllocatedSize = 0;
+size_t g_MaxAllocatedSize = 0;
+
+void* Allocate(size_t size) {
+	void* p = malloc(size);
+	size = AllocSize(p);
+        g_AllocatedSize += size;
+        if (g_AllocatedSize > g_MaxAllocatedSize) {
+            g_MaxAllocatedSize = g_AllocatedSize;
+        }
+
+	return p;
+}
+
+void Free(void* p) {
+	size_t size = AllocSize(p);
+        g_AllocatedSize -= size;
+	free(p);
+}
+
+void* operator new(size_t size) throw (std::bad_alloc) {
+	void* ptr = Allocate(size);
+	if (!ptr) {
+		throw std::bad_alloc();
+	}
+	return ptr;
+}
+
+void* operator new(size_t size, const std::nothrow_t&) noexcept {
+	return Allocate(size);
+}
+
+void operator delete(void* ptr) noexcept {
+	Free(ptr);
+}
+
+void operator delete(void* ptr, const std::nothrow_t&) noexcept {
+	Free(ptr);
+}
+
+void* operator new[](size_t size) throw (std::bad_alloc) {
+	return ::operator new(size);
+}
+
+void* operator new[](size_t size, const std::nothrow_t&) noexcept {
+	return Allocate(size);
+}
+
+void operator delete[](void* ptr) noexcept {
+	Free(ptr);
+}
+
+void operator delete[](void* ptr, const std::nothrow_t&) noexcept {
+	Free(ptr);
+}
+
+#endif // DEBUG_MEMORY
 
 struct Digits1 {
 	uint8_t v[10] = {};
@@ -56,9 +132,6 @@ Digits2& operator+=(Digits2& lhs, const Digits2& rhs) {
 using Digits = Digits2;
 using Numbers = std::vector<unsigned>;
 
-struct Numbers10 {
-	std::array<Numbers, 10> parts;
-};
 
 std::ostream& operator<<(std::ostream& stream, const Digits& ds) {
 	stream << "<Digits";
@@ -136,34 +209,41 @@ bool accept(const Digits2& provided, const Digits2& required) {
 	return true;
 }
 
-void sieve(const Digits& ds, Numbers10& vec, int width) {
-	Numbers10 out;
+void sieve(const Digits& ds, Numbers& vec, int width) {
+	Numbers out[10];
 	auto mul = pow10(width - 1);
 
-	for (auto& part : vec.parts) {
-		for (auto p : part) {
-			auto base_digits = digits(p, width - 1);
+	for (auto p : vec) {
+		auto base_digits = digits(p, width - 1);
 
-			auto p2 = uint64_t(p) * p;
-			auto base_pow_digits = digits(p2, width - 1);
-			auto base_msd = p2 / mul % 10;
-			base_digits += base_pow_digits;
+		auto p2 = uint64_t(p) * p;
+		auto base_pow_digits = digits(p2, width - 1);
+		auto base_msd = p2 / mul % 10;
+		base_digits += base_pow_digits;
 
-			for (int i = 0; i < 10; ++i) {
-				auto px = p + i * mul;
-				auto px_digits = base_digits;
-				auto msd = (base_msd + 2 * i * p + (mul > 1 ? 0 : i*i)) % 10;
-				inc_digit(px_digits, i);
-				inc_digit(px_digits, msd);
+		for (int i = 0; i < 10; ++i) {
+			auto px = p + i * mul;
+			auto px_digits = base_digits;
+			auto msd = (base_msd + 2 * i * p + (mul > 1 ? 0 : i*i)) % 10;
+			inc_digit(px_digits, i);
+			inc_digit(px_digits, msd);
 
-				if (accept(ds, px_digits)) {
-					out.parts[i].push_back(px);
-				}
+			if (accept(ds, px_digits)) {
+				out[i].push_back(px);
 			}
 		}
 	}
 
-	vec.parts.swap(out.parts);
+	vec.clear();
+	size_t s = 0;
+	for (int i = 0; i < 10; ++i) {
+		s += out[i].size();
+	}
+	vec.reserve(s);
+
+	for (int i = 0; i < 10; ++i) {
+		std::copy(out[i].begin(), out[i].end(), std::back_inserter(vec));
+	}
 }
 
 bool accept_exact(const Digits& provided, const Digits& required) {
@@ -180,17 +260,15 @@ bool accept_exact(const Digits& provided, const Digits& required) {
 	return true;
 }
 
-uint64_t find_best(const Digits& ds, const Numbers10& vec, int sieved, int width) {
+uint64_t find_best(const Digits& ds, const Numbers& vec, int sieved, int width) {
 	auto mul = pow10(std::max(0, sieved - 1));
 	for (int i = pow10(width - sieved + 1); i-- > 0;) {
-		for (auto p_it = vec.parts.rbegin(); p_it != vec.parts.rend(); ++p_it) {
-			for (auto it = p_it->rbegin(), ie = p_it->rend(); it != ie; ++it) {
-				auto p = *it;
-				auto px = p + i * mul;
-				auto px_digits = combined_digits(px);
-				if (accept_exact(ds, px_digits)) {
-					return px;
-				}
+		for (auto it = vec.rbegin(), ie = vec.rend(); it != ie; ++it) {
+			auto p = *it;
+			auto px = p + i * mul;
+			auto px_digits = combined_digits(px);
+			if (accept_exact(ds, px_digits)) {
+				return px;
 			}
 		}
 	}
@@ -208,11 +286,11 @@ void solve(const std::vector<int>& digits) {
 		inc_digit(ds, d);
 	}
 
-	Numbers10 vec;
+	Numbers vec;
 	int w = digits.size() / 3;
 	int s = (w == 9 ? w - 1 : w);
 
-	vec.parts[0].push_back(0);
+	vec.push_back(0);
 	for (int i = 1; i < s; ++i) {
 		sieve(ds, vec, i);
 	}
@@ -271,5 +349,9 @@ int main() {
 	// 	4, 5, 1, 2, 7, 0, 2, 3, 0, 5, 9, 2, 4});
 	// solve_example();
 	solve_input();
+
+#if DEBUG_MEMORY
+        std::cerr << "MaxMem = " << g_MaxAllocatedSize / (1 << 20) << "MB" << std::endl;
+#endif // DEBUG MEMORY
 	return 0;
 }

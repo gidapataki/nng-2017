@@ -6,3 +6,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_executable(squares
     squares.cpp
 )
+
+add_executable(squares0
+    squares0.cpp
+)
