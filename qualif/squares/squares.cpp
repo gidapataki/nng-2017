@@ -4,83 +4,6 @@
 #include <cassert>
 #include <algorithm>
 
-#if DEBUG_MEMORY
-
-#if __APPLE__
-	#include <malloc/malloc.h>
-#else
-	#include <malloc.h>
-#endif
-
-size_t AllocSize(void* p) {
-	if (!p) {
-		return 0;
-	}
-#if __APPLE__
-	return malloc_size(p) + 8;
-#else
-	return malloc_usable_size(p) + 8;
-#endif
-	return 0;
-}
-
-size_t g_AllocatedSize = 0;
-size_t g_MaxAllocatedSize = 0;
-
-void* Allocate(size_t size) {
-	void* p = malloc(size);
-	size = AllocSize(p);
-        g_AllocatedSize += size;
-        if (g_AllocatedSize > g_MaxAllocatedSize) {
-            g_MaxAllocatedSize = g_AllocatedSize;
-        }
-
-	return p;
-}
-
-void Free(void* p) {
-	size_t size = AllocSize(p);
-        g_AllocatedSize -= size;
-	free(p);
-}
-
-void* operator new(size_t size) throw (std::bad_alloc) {
-	void* ptr = Allocate(size);
-	if (!ptr) {
-		throw std::bad_alloc();
-	}
-	return ptr;
-}
-
-void* operator new(size_t size, const std::nothrow_t&) noexcept {
-	return Allocate(size);
-}
-
-void operator delete(void* ptr) noexcept {
-	Free(ptr);
-}
-
-void operator delete(void* ptr, const std::nothrow_t&) noexcept {
-	Free(ptr);
-}
-
-void* operator new[](size_t size) throw (std::bad_alloc) {
-	return ::operator new(size);
-}
-
-void* operator new[](size_t size, const std::nothrow_t&) noexcept {
-	return Allocate(size);
-}
-
-void operator delete[](void* ptr) noexcept {
-	Free(ptr);
-}
-
-void operator delete[](void* ptr, const std::nothrow_t&) noexcept {
-	Free(ptr);
-}
-
-#endif // DEBUG_MEMORY
 
 struct Digits1 {
 	uint8_t v[10] = {};
@@ -349,9 +272,5 @@ int main() {
 	// 	4, 5, 1, 2, 7, 0, 2, 3, 0, 5, 9, 2, 4});
 	// solve_example();
 	solve_input();
-
-#if DEBUG_MEMORY
-        std::cerr << "MaxMem = " << g_MaxAllocatedSize / (1 << 20) << "MB" << std::endl;
-#endif // DEBUG MEMORY
 	return 0;
 }
