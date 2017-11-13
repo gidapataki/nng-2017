@@ -18,3 +18,6 @@ include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y -O3")
 
 add_executable(lego main.cpp)
+
+
+# target_compile_definitions(lego PRIVATE HIPSTER)

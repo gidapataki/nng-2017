@@ -215,6 +215,8 @@ using BitsCache =
 
 std::unique_ptr<BitsCache> bits_cache;
 
+
+#if HIPSTER
 auto memoize(std::uint64_t (*f)(BrickBits arg)) {
     return [f](BrickBits arg) mutable {
         arg.Normalize();
@@ -233,14 +235,21 @@ auto memoize(std::uint64_t (*f)(BrickBits arg)) {
 }
 
 std::uint64_t EveryBits4(BrickBits bits);
-
 auto memoizedEveryBits4 = memoize(EveryBits4);
 
+
 std::uint64_t EveryBits4(BrickBits bits) {
+#else
+std::uint64_t memoizedEveryBits4(BrickBits bits) {
+#endif
     --bits.height;
     if (bits.height == 0) {
         return (bits.ab & bits.bc & bits.cd) != 0;
     }
+
+#if !HIPSTER
+    bits.Normalize();
+#endif
 
     int ones_end = bits.ones_end;
     int twos_end = bits.twos_end;
@@ -267,6 +276,20 @@ std::uint64_t EveryBits4(BrickBits bits) {
     }
 
     std::uint64_t result = 0;
+
+#if !HIPSTER
+#ifdef CACHE_STATS
+    ++cache_query;
+#endif
+    auto it = bits_cache->find(bits);
+    if (it != end(*bits_cache)) {
+        return it->second;
+    }
+
+#ifdef CACHE_STATS
+    ++cache_miss;
+#endif
+#endif
 
     // 4
     for (int a = threes_end; a < fours_end; ++a) {
@@ -397,6 +420,10 @@ std::uint64_t EveryBits4(BrickBits bits) {
             }
         }
     }
+
+#if !HIPSTER
+    bits_cache->insert(std::make_pair(bits, result));
+#endif
     return result;
 }
 
@@ -436,34 +463,6 @@ std::uint64_t factorial20(std::uint64_t n) {
 // { 1/1, 1/1, 1/2, 1/6, 1/24, 1/120, 1/720, 1/5040, 1/40320, 1/362880, 1/3628800, 1/39916800, 1/479001600, 1/6227020800, 1/87178291200, 1/1307674368000, 1/20922789888000, 1/355687428096000, 1/6402373705728000 }
 // { 1/1, 1/1, 1/2, 1/6, 1/24, 1/120, 1/720, 1/5040, 1/40320, 1/362880, 1/3628800, 1/39916800, 1/479001600, 1/6227020800, 1/87178291200, 1/1307674368000, 1/20922789888000, 1/355687428096000, 1/6402373705728000, 1/121645100408832000 }
 // { 1/1, 1/1, 1/2, 1/6, 1/24, 1/120, 1/720, 1/5040, 1/40320, 1/362880, 1/3628800, 1/39916800, 1/479001600, 1/6227020800, 1/87178291200, 1/1307674368000, 1/20922789888000, 1/355687428096000, 1/6402373705728000, 1/121645100408832000, 1/2432902008176640000 }
-
-Poly getFactPoly(std::uint64_t n) {
-    std::vector<Rational> coeffs;
-    coeffs.reserve(n);
-    for (int i = 0; i <= n; ++i) {
-        coeffs.push_back(Rational(1, factorial20(i)));
-    }
-    return Poly(coeffs.begin(), coeffs.end());
-}
-
-std::uint64_t getPossibleOrderings(int height, const boost::container::static_vector<int, 5>& fours) {
-    using namespace boost::math::tools;
-    using boost::rational;
-
-    Poly p{1};
-    for (auto n : fours) {
-        p *= getFactPoly(n);
-    }
-
-    if (height >= p.size()) {
-        return 0;
-    }
-
-    auto coeff = p[height];
-    coeff *= factorial20(height);
-
-    return coeff.numerator();
-}
 
 std::uint64_t doTheThing(int height, Bricks bricks) {
     // check if there is even enough bricks to make a wall tall enough
