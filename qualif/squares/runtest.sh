@@ -11,5 +11,5 @@ for infile in tests/test*.in
 do
 	echo "Testing ${infile}"
 	outfile=tests/$(basename ${infile} .in).out
-	diff "${outfile}" <("$1" < "${infile}")
+	(time diff "${outfile}" <("$1" < "${infile}")) 2> >(grep real)
 done

@@ -217,15 +217,32 @@ uint64_t find_best(const Digits& ds, const Numbers10& vec, int sieved, int width
 	return 0;
 }
 
+int pow_prefix[100] = {
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	1, 1, 1, 1, 0, 2, 2, 0, 3, 3,
+	4, 4, 0, 5, 0, 6, 0, 7, 0, 8,
+	9, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 0, 2, 2, 2, 2, 2,
+	2, 2, 2, 2, 0, 3, 3, 3, 3, 3,
+	3, 3, 3, 0, 4, 4, 4, 4, 4, 4,
+	0, 5, 5, 5, 5, 5, 5, 0, 6, 6,
+	6, 6, 6, 0, 7, 7, 7, 7, 7, 0,
+	8, 8, 8, 8, 0, 9, 9, 9, 9, 9
+};
+
 uint64_t find_best2(const Digits& ds, const Numbers10& vec, int sieved) {
 	auto mul = pow10(std::max(0, sieved - 1));
 
 	for (int d10 = 10; d10-- > 0;) {
 		for (int d1 = 10; d1-- > 0;) {
+			int x = d10 * 10 + d1;
 			Digits req;
+			auto pp = pow_prefix[x];
 			inc_digit(req, d1);
 			inc_digit(req, d10);
-			int x = d10 * 10 + d1;
+			if (pp) {
+				inc_digit(req, pp);
+			}
 
 			for (int pt = 10; pt-- > 0;) {
 				auto& part = vec.parts[pt];
@@ -245,20 +262,6 @@ uint64_t find_best2(const Digits& ds, const Numbers10& vec, int sieved) {
 		}
 	}
 
-#if 0
-	for (int i = pow10(width - sieved + 1); i-- > 0;) {
-		for (auto p_it = vec.parts.rbegin(); p_it != vec.parts.rend(); ++p_it) {
-			for (auto it = p_it->rbegin(), ie = p_it->rend(); it != ie; ++it) {
-				auto p = *it;
-				auto px = p + i * mul;
-				auto px_digits = combined_digits(px);
-				if (accept_exact(ds, px_digits)) {
-					return px;
-				}
-			}
-		}
-	}
-#endif
 	return 0;
 }
 
@@ -274,7 +277,7 @@ void solve(const std::vector<int>& digits) {
 
 	Numbers10 vec;
 	int w = digits.size() / 3;
-	int s = (w == 9 ? w - 1 : w);
+	int s = (w >= 6 ? w - 1 : w);
 
 	vec.parts[0].push_back(0);
 	vec.dparts[0].push_back(ds);
@@ -287,17 +290,6 @@ void solve(const std::vector<int>& digits) {
 	} else {
 		std::cout << find_best(ds, vec, s, w) << std::endl;
 	}
-
-	// int count = 0;
-	// for (auto& part : vec.dparts) {
-	// 	for (auto& d : part) {
-	// 		if (get_digit(d, 7) > 0) {
-	// 			++count;
-	// 		}
-	// 		// std::cout << d << std::endl;
-	// 	}
-	// }
-	// std::cerr << count << std::endl;
 }
 
 void solve_example() {
