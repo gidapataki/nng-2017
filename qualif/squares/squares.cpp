@@ -265,7 +265,7 @@ uint64_t find_best2(const Digits& ds, const Numbers10& vec, int sieved) {
 	return 0;
 }
 
-void solve(const std::vector<int>& digits) {
+void solve(const std::vector<int>& digits, bool allow_best2=false) {
 	assert(digits.size() % 3 == 0);
 
 	Digits ds;
@@ -277,7 +277,7 @@ void solve(const std::vector<int>& digits) {
 
 	Numbers10 vec;
 	int w = digits.size() / 3;
-	int s = (w >= 6 ? w - 1 : w);
+	int s = ((allow_best2 && w >= 6) ? w - 1 : w);
 
 	vec.parts[0].push_back(0);
 	vec.dparts[0].push_back(ds);
@@ -307,6 +307,7 @@ void solve_example() {
 
 void solve_input() {
 	int t;
+	int max_n = 0;
 	std::vector<std::vector<int>> testcases;
 
 	std::cin >> t;
@@ -314,6 +315,7 @@ void solve_input() {
 	for (int i = 0; i < t; ++i) {
 		int n;
 		std::cin >> n;
+		max_n = std::max(n, max_n);
 		auto& digits = testcases[i];
 		for (int j = 0; j < n; ++j) {
 			int d;
@@ -323,7 +325,7 @@ void solve_input() {
 	}
 
 	for (auto& digits : testcases) {
-		solve(digits);
+		solve(digits, max_n == 27);
 	}
 }
 
