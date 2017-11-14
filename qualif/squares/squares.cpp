@@ -18,6 +18,10 @@ void inc_digit(Digits1& ds, int index) {
 	++ds.v[index];
 }
 
+void dec_digit(Digits1& ds, int index) {
+	--ds.v[index];
+}
+
 Digits1& operator+=(Digits1& lhs, const Digits1& rhs) {
 	for (int i = 0; i < 10; ++i) {
 		lhs.v[i] += rhs.v[i];
@@ -47,6 +51,10 @@ void inc_digit(Digits2& ds, int index) {
 	// ds.data[index >> 3] += 1ull << ((index & 7) << 3);
 }
 
+void dec_digit(Digits2& ds, int index) {
+	--ds.digit[index];
+}
+
 Digits2& operator+=(Digits2& lhs, const Digits2& rhs) {
 	lhs.data[0] += rhs.data[0];
 	lhs.data[1] += rhs.data[1];
@@ -58,7 +66,9 @@ using Numbers = std::vector<unsigned>;
 
 struct Numbers10 {
 	std::array<Numbers, 10> parts;
+	std::array<std::vector<Digits>, 10> dparts;
 };
+
 
 std::ostream& operator<<(std::ostream& stream, const Digits& ds) {
 	stream << "<Digits";
@@ -136,6 +146,13 @@ bool accept(const Digits2& provided, const Digits2& required) {
 	return true;
 }
 
+Digits2 substract(const Digits2& provided, const Digits2& required) {
+	Digits2 result;
+	result.data[0] = provided.data[0] - required.data[0];
+	result.data[1] = provided.data[1] - required.data[1];
+	return result;
+}
+
 void sieve(const Digits& ds, Numbers10& vec, int width) {
 	Numbers10 out;
 	auto mul = pow10(width - 1);
@@ -158,12 +175,14 @@ void sieve(const Digits& ds, Numbers10& vec, int width) {
 
 				if (accept(ds, px_digits)) {
 					out.parts[i].push_back(px);
+					out.dparts[i].push_back(substract(ds, px_digits));
 				}
 			}
 		}
 	}
 
 	vec.parts.swap(out.parts);
+	vec.dparts.swap(out.dparts);
 }
 
 bool accept_exact(const Digits& provided, const Digits& required) {
@@ -198,6 +217,51 @@ uint64_t find_best(const Digits& ds, const Numbers10& vec, int sieved, int width
 	return 0;
 }
 
+uint64_t find_best2(const Digits& ds, const Numbers10& vec, int sieved) {
+	auto mul = pow10(std::max(0, sieved - 1));
+
+	for (int d10 = 10; d10-- > 0;) {
+		for (int d1 = 10; d1-- > 0;) {
+			Digits req;
+			inc_digit(req, d1);
+			inc_digit(req, d10);
+			int x = d10 * 10 + d1;
+
+			for (int pt = 10; pt-- > 0;) {
+				auto& part = vec.parts[pt];
+				auto& dpart = vec.dparts[pt];
+				for (int i = part.size(); i-- > 0;) {
+					auto& dp = dpart[i];
+					auto p = part[i];
+					if (accept(dp, req)) {
+						auto px = p + x * mul;
+						auto px_digits = combined_digits(px);
+						if (accept_exact(ds, px_digits)) {
+							return px;
+						}
+					}
+				}
+			}
+		}
+	}
+
+#if 0
+	for (int i = pow10(width - sieved + 1); i-- > 0;) {
+		for (auto p_it = vec.parts.rbegin(); p_it != vec.parts.rend(); ++p_it) {
+			for (auto it = p_it->rbegin(), ie = p_it->rend(); it != ie; ++it) {
+				auto p = *it;
+				auto px = p + i * mul;
+				auto px_digits = combined_digits(px);
+				if (accept_exact(ds, px_digits)) {
+					return px;
+				}
+			}
+		}
+	}
+#endif
+	return 0;
+}
+
 void solve(const std::vector<int>& digits) {
 	assert(digits.size() % 3 == 0);
 
@@ -213,21 +277,27 @@ void solve(const std::vector<int>& digits) {
 	int s = (w == 9 ? w - 1 : w);
 
 	vec.parts[0].push_back(0);
+	vec.dparts[0].push_back(ds);
 	for (int i = 1; i < s; ++i) {
 		sieve(ds, vec, i);
 	}
 
-#if 0
-	int s = w - 1;
-	if (vec.size() < 100000) {
-		s = w;
-		if (w >= 2) {
-			sieve(ds, vec, w - 1);
-		}
+	if (s == w - 1) {
+		std::cout << find_best2(ds, vec, s) << std::endl;
+	} else {
+		std::cout << find_best(ds, vec, s, w) << std::endl;
 	}
-#endif
 
-	std::cout << find_best(ds, vec, s, w) << std::endl;
+	// int count = 0;
+	// for (auto& part : vec.dparts) {
+	// 	for (auto& d : part) {
+	// 		if (get_digit(d, 7) > 0) {
+	// 			++count;
+	// 		}
+	// 		// std::cout << d << std::endl;
+	// 	}
+	// }
+	// std::cerr << count << std::endl;
 }
 
 void solve_example() {
