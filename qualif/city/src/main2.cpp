@@ -9,7 +9,7 @@
 #include <limits>
 #include <functional>
 #include <algorithm>
-
+#include <chrono>
 
 // matrix.hpp
 
@@ -401,6 +401,9 @@ private:
 	};
 
 	void initSolution(Solution& sol);
+	void solve(const Args& args, Solution& sol);
+	void improveSolution(const Args& args);
+
 	void setOccupied(Solution& sol, const Position& pos, int tick);
 	bool isOccupied(Solution& sol, const Position& pos, int tick);
 	void addMove(Solution& sol, int tick, const Move& move);
@@ -422,6 +425,9 @@ private:
 	std::vector<Position> target_pos_;
 	std::vector<Car> cars_;
 	std::vector<Garage> garages_;
+
+	int sol_count_ = 0;
+	Solution solution_;
 };
 
 void City::fromStream(std::istream& stream) {
@@ -676,11 +682,11 @@ void City::calculatePath(Solution& sol, const Args& args, Car* car) {
 			if (steps.size() > args.steps_limit) {
 				break;
 			}
-
-			if (args.tick_limit > 0 && dtick > 4 + args.tick_limit * dst0) {
+#if 0
+			if (args.tick_limit > 0 && dtick > 4 + args.tick_limit * dst) {
 				break;
 			}
-
+#endif
 			if (!isOccupied(sol, pos, tick + 1)) {
 				queue.push({
 					dst, dtick + 1,
@@ -752,15 +758,60 @@ void City::calculatePath(Solution& sol, const Args& args, Car* car) {
 #endif
 }
 
+void City::solve(const Args& args, Solution& sol) {
+	int count = 0;
+	auto garages = garages_;
+
+	while (true) {
+		std::vector<Car*> cars;
+
+		for (auto& garage : garages) {
+			if (!garage.cars.empty()) {
+				cars.push_back(garage.cars.front());
+			}
+		}
+
+		if (cars.empty()) {
+			break;
+		}
+
+		std::sort(cars.begin(), cars.end(), [](Car* lhs, Car* rhs) {
+			auto l1 = -lhs->emission;
+			auto r1 = -rhs->emission;
+			return
+				std::tie(l1) <
+				std::tie(r1);
+		});
+
+		for (auto* car : cars) {
+			auto& garage = garages[car->origin];
+			calculatePath(sol, args, car);
+			garage.cars.pop_front();
+			++count;
+			// std::cerr << "C " << count << std::endl;
+		}
+	}
+}
+
+void City::improveSolution(const Args& args) {
+	Solution sol;
+	initSolution(sol);
+	solve(args, sol);
+
+	if (sol_count_ == 0 || sol.sum_emission < solution_.sum_emission) {
+		std::swap(sol, solution_);
+	}
+	++sol_count_;
+}
+
 void City::solve() {
+    auto t0 = std::chrono::high_resolution_clock::now();
 	createGraph();
 	calculateDistances();
 	prepareCars();
 
-	std::vector<Args> args_vec;
-	std::vector<Solution> sol_vec;
-	Solution sol;
-	initSolution(sol);
+    auto t1 = std::chrono::high_resolution_clock::now();
+    auto delta_t = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0);
 
 #if 1
 	{
@@ -768,7 +819,7 @@ void City::solve() {
 		args.steps_limit = 990;
 		args.color_limit = 23;
 		args.compare = convergeRoutes;
-		args_vec.push_back(args);
+		improveSolution(args);
 	}
 #endif
 
@@ -778,79 +829,38 @@ void City::solve() {
 		args.steps_limit = 1600;
 		args.color_limit = 12;
 		args.compare = convergeRoutes;
-		args_vec.push_back(args);
+		improveSolution(args);
 	}
 #endif
 
-#if 0
-	{
+#if 1
+	t1 = std::chrono::high_resolution_clock::now();
+	delta_t = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0);
+	if (delta_t.count() < 5500) {
 		Args args;
-		args.steps_limit = 100000;
-		args.color_limit = 3;
-		args.tick_limit = 2;
-		args.compare = smallestTick;
-		args_vec.push_back(args);
+		args.steps_limit = 2100;
+		args.color_limit = 10;
+		args.compare = convergeRoutes;
+		improveSolution(args);
 	}
 #endif
 
-	sol_vec.clear();
 
-	// try different approaches
-	for (auto& args : args_vec) {
-		int count = 0;
-		auto garages = garages_;
-		sol_vec.push_back(sol);
-
-		while (true) {
-			std::vector<Car*> cars;
-
-			for (auto& garage : garages) {
-				if (!garage.cars.empty()) {
-					cars.push_back(garage.cars.front());
-				}
+	if (sol_count_ > 0) {
+		for (auto& moves : solution_.tick_moves) {
+			std::cout << moves.size() << std::endl;
+			for (auto& move : moves) {
+				std::cout << move.index << " " << toCommand(move.dir) << std::endl;
 			}
-
-			if (cars.empty()) {
-				break;
-			}
-
-			std::sort(cars.begin(), cars.end(), [](Car* lhs, Car* rhs) {
-				auto l1 = -lhs->emission;
-				auto r1 = -rhs->emission;
-				return
-					std::tie(l1) <
-					std::tie(r1);
-			});
-
-
-			for (auto* car : cars) {
-				auto& garage = garages[car->origin];
-				calculatePath(sol_vec.back(), args, car);
-				garage.cars.pop_front();
-				++count;
-				// std::cerr << "C " << count << std::endl;
-			}
-		}
-	}
-
-	auto best = std::max_element(sol_vec.begin(), sol_vec.end(),
-		[](const Solution& lhs, const Solution& rhs) {
-			return lhs.sum_emission > rhs.sum_emission;
-		});
-
-	sol = *best;
-
-
-	for (auto& moves : sol.tick_moves) {
-		std::cout << moves.size() << std::endl;
-		for (auto& move : moves) {
-			std::cout << move.index << " " << toCommand(move.dir) << std::endl;
 		}
 	}
 	std::cout << 0 << std::endl;
 
 #if LOCAL_BUILD
-	std::cerr << "E " << sol.sum_emission << std::endl;
+	t1 = std::chrono::high_resolution_clock::now();
+	delta_t = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0);
+	std::cerr << "E " << solution_.sum_emission << std::endl;
+    std::cerr << "Elapsed " << delta_t.count() << std::endl;
 #endif
 }
 
