@@ -97,8 +97,9 @@ void Hypno::Process() {
 				AttackTop(hero);
 			} else if (!HasDownHero() && (hero.id % 2 == 0)) {
 				AttackDown(hero);
+			} else {
+				AttackMid(hero);
 			}
-			AttackMid(hero);
 		} else {
 			if (IsAtTop(hero)) {
 				AttackTop(hero);
@@ -621,14 +622,14 @@ bool Hypno::IsNearOurBase(const MAP_OBJECT& unit, int dst) const {
 
 bool Hypno::IsAtTop(const MAP_OBJECT& unit) const {
 	auto pos = unit.pos;
-	return ((pos.y > 12 && pos.x < 5) ||
-		(pos.y > MaxY() - 5 && pos.x < MaxX() - 12));
+	return ((pos.y > 12 && pos.x < 7) ||
+		(pos.y > MaxY() - 7 && pos.x < MaxX() - 12));
 }
 
 bool Hypno::IsAtDown(const MAP_OBJECT& unit) const {
 	auto pos = unit.pos;
-	return ((pos.x > 12 && pos.y < 5) ||
-		(pos.x > MaxX() - 5 && pos.y < MaxY() - 12));
+	return ((pos.x > 12 && pos.y < 7) ||
+		(pos.x > MaxX() - 7 && pos.y < MaxY() - 12));
 }
 
 bool Hypno::HasTopHero() const {
