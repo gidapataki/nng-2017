@@ -24,7 +24,7 @@ void Hypno::AttackMove(int hero_id, const Position& pos) {
 		auto hp_map = GetHPMap();
 
 		// try to backtrack
-		if (false && dmg_map[hero->pos] > 0) {
+		if (dmg_map[hero->pos] > 0) {
 			auto neighbours = GetNeighbours(hero->pos);
 			auto target_pos = *std::min_element(begin(neighbours), end(neighbours),
 				[&](auto lhs, auto rhs) {
