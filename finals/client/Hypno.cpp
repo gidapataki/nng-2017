@@ -38,7 +38,7 @@ Position Hypno::FightOrFlight(int hero_id) const {
 }
 
 void Hypno::AttackMove(int hero_id, const Position& pos) {
-
+	std::cerr << ". " << pos << std::endl;
 	auto hero = mParser.GetUnitByID(hero_id);
 	auto target_pos = FightOrFlight(hero_id);
 	if (target_pos != hero->pos) {
@@ -94,6 +94,7 @@ void Hypno::AttackMid(const MAP_OBJECT& hero) {
 void Hypno::Process() {
 	for (auto& hero : GetOurHeroes()) {
 		if (IsNearOurBase(hero, 12)) {
+			std::cerr << "NEAR " << hero.id << std::endl;
 			if (!HasTopHero() && (hero.id % 2 == 1)) {
 				AttackTop(hero);
 			} else if (!HasDownHero() && (hero.id % 2 == 0)) {
@@ -102,6 +103,7 @@ void Hypno::Process() {
 				AttackMid(hero);
 			}
 		} else {
+			std::cerr << "FAR " << hero.id << std::endl;
 			if (IsAtTop(hero)) {
 				AttackTop(hero);
 			} else if (IsAtDown(hero)) {
@@ -627,14 +629,16 @@ bool Hypno::IsNearOurBase(const MAP_OBJECT& unit, int dst) const {
 
 bool Hypno::IsAtTop(const MAP_OBJECT& unit) const {
 	auto pos = unit.pos;
-	return ((pos.y > 12 && pos.x < 7) ||
-		(pos.y > MaxY() - 7 && pos.x < MaxX() - 12));
+	return
+		(pos.y > 12 && pos.x < 7) ||
+		(pos.y > MaxY() - 7 && pos.x < MaxX() - 12);
 }
 
 bool Hypno::IsAtDown(const MAP_OBJECT& unit) const {
 	auto pos = unit.pos;
-	return ((pos.x > 12 && pos.y < 7) ||
-		(pos.x > MaxX() - 7 && pos.y < MaxY() - 12));
+	return
+		(pos.x > 12 && pos.y < 7) ||
+		(pos.x > MaxX() - 7 && pos.y < MaxY() - 12);
 }
 
 bool Hypno::HasTopHero() const {
