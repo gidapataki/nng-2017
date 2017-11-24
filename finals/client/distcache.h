@@ -1,5 +1,10 @@
 #pragma once
 
+#include <vector>
+
+#include "parser.h"
+#include "Position.h"
+
 class DISTCACHE
 {
 public:
