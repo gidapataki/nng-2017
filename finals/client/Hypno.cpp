@@ -1,6 +1,8 @@
 #include "Hypno.h"
 #include <set>
 #include <iostream>
+#include <algorithm>
+
 
 CLIENT* CreateClient()
 {
@@ -144,4 +146,38 @@ bool Hypno::IsLeftLane(const Position& pos) const {
 
 bool Hypno::IsRightLane(const Position& pos) const {
 	return pos.x > mParser.w - 4;
+}
+
+std::vector<MAP_OBJECT> Hypno::GetTopEnemyTurrets() const {
+	return OrderByX(GetObjects([&](const MAP_OBJECT& unit) {
+		return unit.t == TURRET && unit.side == 1 && IsTopLane(unit.pos);
+	}));
+}
+
+std::vector<MAP_OBJECT> Hypno::OrderByX(
+	std::vector<MAP_OBJECT> units, bool reverse) const
+{
+	std::sort(units.begin(), units.end(), LessByX);
+	if (reverse) {
+		std::reverse(units.begin(), units.end());
+	}
+	return units;
+}
+
+std::vector<MAP_OBJECT> Hypno::OrderByY(
+	 std::vector<MAP_OBJECT> units, bool reverse) const
+{
+	std::sort(units.begin(), units.end(), LessByY);
+	if (reverse) {
+		std::reverse(units.begin(), units.end());
+	}
+	return units;
+}
+
+bool Hypno::LessByX(const MAP_OBJECT& lhs, const MAP_OBJECT& rhs) {
+	return lhs.pos.x < rhs.pos.x;
+}
+
+bool Hypno::LessByY(const MAP_OBJECT& lhs, const MAP_OBJECT& rhs) {
+	return lhs.pos.y < rhs.pos.y;
 }

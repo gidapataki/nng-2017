@@ -37,4 +37,12 @@ protected:
 	bool IsLeftLane(const Position& pos) const;
 	bool IsBottomLane(const Position& pos) const;
 	bool IsRightLane(const Position& pos) const;
+
+	std::vector<MAP_OBJECT> GetTopEnemyTurrets() const;
+
+	std::vector<MAP_OBJECT> OrderByX(std::vector<MAP_OBJECT> units, bool reverse=false) const;
+	std::vector<MAP_OBJECT> OrderByY(std::vector<MAP_OBJECT> units, bool reverse=false) const;
+
+	static bool LessByX(const MAP_OBJECT& lhs, const MAP_OBJECT& rhs);
+	static bool LessByY(const MAP_OBJECT& lhs, const MAP_OBJECT& rhs);
 };
