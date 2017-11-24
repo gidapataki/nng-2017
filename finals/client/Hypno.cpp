@@ -103,7 +103,7 @@ void Hypno::Process() {
 			if (IsAtTop(hero)) {
 				AttackTop(hero);
 			} else if (IsAtDown(hero)) {
-				AttackTop(hero);
+				AttackDown(hero);
 			} else {
 				AttackMid(hero);
 			}
