@@ -278,11 +278,8 @@ Matrix<double> Hypno::GetDamageMap() const {
 					continue;
 				}
 				int d_sq = Position{x, y}.DistSquare(unit.pos);
-				if (d_sq > range_sq) {
+				if (d_sq > range_sq+2) {
 					continue;
-				}
-				if (x == 2 && y == result.height() - 1) {
-					assert(false);
 				}
 				result.at(x, y) += sign * dmg;
 			}
