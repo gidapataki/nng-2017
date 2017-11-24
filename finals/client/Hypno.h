@@ -54,6 +54,7 @@ protected:
 		const Position& pos, const Position& center, int radius_sq) const;
 
 	bool CanOneHit(const MAP_OBJECT& unit) const;
+	Position Retreat(const Matrix<double>& dmg_map, const MAP_OBJECT& hero) const;
 	Position FightOrFlight(int hero_id) const;
 
 	int GetPreferredEnemyToAttack(const std::vector<MAP_OBJECT>& enemies) const;

@@ -15,10 +15,41 @@ Hypno::Hypno(std::string preferredOpponents) :
 	// nothing to see here
 }
 
+Position Hypno::Retreat(const Matrix<double>& dmg_map, const MAP_OBJECT& hero) const {
+	auto neighbours = GetNeighbours(hero.pos);
+	auto target_pos = *std::min_element(begin(neighbours), end(neighbours),
+		[&](auto lhs, auto rhs) {
+			return dmg_map[lhs] < dmg_map[rhs];
+		}
+	);
+	return target_pos;
+}
+
 Position Hypno::FightOrFlight(int hero_id) const {
-	auto dmg_map = GetDamageMap();
-	auto hp_map = GetHPMap();
 	auto hero = mParser.GetUnitByID(hero_id);
+
+	auto our_minion_map = GetDamageMap(GetOurMinions());
+	auto enemy_minion_map = GetDamageMap(GetEnemyMinions());
+
+	auto our_turret_map = GetDamageMap(GetOurTurrets());
+	auto enemy_turret_map = GetDamageMap(GetEnemyTurrets());
+
+	auto our_hero_map = GetDamageMap(GetOurHeroes());
+	auto enemy_hero_map = GetDamageMap(GetEnemyHeroes());
+
+	auto dmg_map =
+		our_minion_map + enemy_minion_map +
+		our_turret_map + enemy_turret_map +
+		our_hero_map + enemy_hero_map;
+
+	if (enemy_minion_map[hero->pos] > 10 &&
+		our_turret_map[hero->pos] == 0 &&
+		our_minion_map[hero->pos] == 0)
+	{
+		return Retreat(dmg_map, *hero);
+	}
+
+	auto hp_map = GetHPMap();
 	if (dmg_map[hero->pos] <= 0) {
 		return hero->pos;
 	}
@@ -28,13 +59,7 @@ Position Hypno::FightOrFlight(int hero_id) const {
 		// If we can last two turns in this position, stay and fight
 		return hero->pos;
 	}
-	auto neighbours = GetNeighbours(hero->pos);
-	auto target_pos = *std::min_element(begin(neighbours), end(neighbours),
-		[&](auto lhs, auto rhs) {
-			return dmg_map[lhs] < dmg_map[rhs];
-		}
-	);
-	return target_pos;
+	return Retreat(dmg_map, *hero);
 }
 
 void Hypno::AttackMove(int hero_id, const Position& pos) {
@@ -145,17 +170,8 @@ std::vector<MAP_OBJECT> Hypno::GetEnemyHeroes() const {
 }
 
 std::vector<MAP_OBJECT> Hypno::GetMinions(int side) const {
-	std::vector<MAP_OBJECT> vec;
-	std::set<int> ids;
-
-	for (auto& cc : mParser.Controllers) {
-		if (cc.controller_id == side) {
-			ids.insert(cc.hero_id);
-		}
-	}
-
 	return GetObjects([&](const MAP_OBJECT& unit) {
-		return (unit.t == MINION && ids.count(unit.id) > 0);
+		return (unit.t == MINION && unit.side == side);
 	});
 }
 
