@@ -19,6 +19,7 @@ protected:
 	virtual void Process();
 
 	void AttackMove(int hero_id, const Position& pos);
+	void AttackTop(const MAP_OBJECT& hero);
 
 	Matrix<int> GetHeatMap() const;
 
@@ -45,4 +46,7 @@ protected:
 
 	static bool LessByX(const MAP_OBJECT& lhs, const MAP_OBJECT& rhs);
 	static bool LessByY(const MAP_OBJECT& lhs, const MAP_OBJECT& rhs);
+
+	int MaxX() const;
+	int MaxY() const;
 };

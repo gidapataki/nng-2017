@@ -24,6 +24,10 @@ void Hypno::AttackMove(int hero_id, const Position& pos) {
 	}
 }
 
+void Hypno::AttackTop(const MAP_OBJECT& hero) {
+	// if ()
+}
+
 void Hypno::Process() {
 	for (auto& hero : GetOurHeroes()) {
 		AttackMove(hero.id, GetEnemyBase().pos);
@@ -133,7 +137,7 @@ Matrix<int> Hypno::GetHeatMap() const {
 }
 
 bool Hypno::IsTopLane(const Position& pos) const {
-	return pos.y > mParser.h - 4;
+	return pos.y > MaxY() - 4;
 }
 
 bool Hypno::IsBottomLane(const Position& pos) const {
@@ -145,7 +149,7 @@ bool Hypno::IsLeftLane(const Position& pos) const {
 }
 
 bool Hypno::IsRightLane(const Position& pos) const {
-	return pos.x > mParser.w - 4;
+	return pos.x > MaxX() - 4;
 }
 
 std::vector<MAP_OBJECT> Hypno::GetTopEnemyTurrets() const {
@@ -181,3 +185,11 @@ bool Hypno::LessByX(const MAP_OBJECT& lhs, const MAP_OBJECT& rhs) {
 bool Hypno::LessByY(const MAP_OBJECT& lhs, const MAP_OBJECT& rhs) {
 	return lhs.pos.y < rhs.pos.y;
 }
+
+int Hypno::MaxX() const {
+	return mParser.w - 1;
+}
+int Hypno::MaxY() const {
+	return mParser.h - 1;
+}
+
