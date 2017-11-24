@@ -119,7 +119,7 @@ void PARSER::Parse(const std::vector<std::string> &ServerResponse)
 			{
 				MAP_OBJECT ob;
 				char type_name[20];
-				sscanf(ServerResponse[i+r+1].c_str(), "%s %d %d %d %d %d %d", type_name, &ob.id, &ob.side, &ob.hp, &ob.pos.x, &ob.pos.y);
+				sscanf(ServerResponse[i+r+1].c_str(), "%s %d %d %d %d %d", type_name, &ob.id, &ob.side, &ob.hp, &ob.pos.x, &ob.pos.y);
 				if (!strcmp(type_name, "hero"))
 				{
 					ob.t = HERO;

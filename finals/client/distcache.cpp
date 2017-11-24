@@ -11,13 +11,15 @@ bool DISTCACHE::LoadFromFile(const char * filename)
 	FILE *f=fopen(filename, "rb");
 	if (f==NULL) return false;
 	unsigned char dimensions[2];
-	fread(dimensions, 1, 2, f);
+	auto s = fread(dimensions, 1, 2, f);
+	(void)s;
 	map_dx = dimensions[0];
 	map_dy = dimensions[1];
 	mMap.resize(map_dx*map_dy);
 	mDistMap.clear();
 	mDistMap.resize(map_dx*map_dy);
-	fread(&mMap.front(), 1, mMap.size(), f);
+	s = fread(&mMap.front(), 1, mMap.size(), f);
+	(void)s;
 	int x, y;
 	for(y=0;y<map_dy;y++)
 		for(x=0;x<map_dx;x++)
@@ -25,7 +27,8 @@ bool DISTCACHE::LoadFromFile(const char * filename)
 		{
 			std::vector<unsigned char> &data = mDistMap[x+y*map_dx];
 			data.resize(map_dx*map_dy);
-			fread(&data.front(), 1, data.size(), f);
+			s = fread(&data.front(), 1, data.size(), f);
+			(void)s;
 		}
 	fclose(f);
 	return true;
