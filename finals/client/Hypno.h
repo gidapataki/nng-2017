@@ -3,6 +3,7 @@
 #include "parser.h"
 #include "Matrix.h"
 #include <vector>
+#include <map>
 #include <string>
 #include <functional>
 
@@ -19,6 +20,9 @@ protected:
 	}
 	virtual bool NeedDebugLog() { return true; }
 	virtual void Process();
+	void MatchEnd() override;
+	void UpdateEnemyHeroes();
+	std::map<int, int> GetMostEvilEnemyHeroes() const;
 
 	void AttackMove(int hero_id, const Position& pos);
 	void AttackTop(const MAP_OBJECT& hero);
@@ -101,4 +105,6 @@ protected:
 	bool IsEnemyInside() const;
 
 	std::string mPreferredOpponents;
+	std::map<int, int> mSuccesfulEnemyHeroes;
+	std::map<int, Position> mLastPositionOfMinions;
 };

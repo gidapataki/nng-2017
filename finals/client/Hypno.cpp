@@ -25,6 +25,11 @@ Position Hypno::Retreat(const Matrix<double>& dmg_map, const MAP_OBJECT& hero) c
 	return target_pos;
 }
 
+void Hypno::MatchEnd() {
+	mSuccesfulEnemyHeroes.clear();
+	mLastPositionOfMinions.clear();
+}
+
 Position Hypno::FightOrFlight(int hero_id) const {
 	auto hero = mParser.GetUnitByID(hero_id);
 	if (IsNearOurBase(*hero)) {
@@ -175,7 +180,63 @@ void Hypno::AttackMid(const MAP_OBJECT& hero) {
 	}
 }
 
+void Hypno::UpdateEnemyHeroes() {
+	std::map<int, Position> newPositionOfMinions;
+	for (const auto& minion: GetOurMinions()) {
+		newPositionOfMinions.emplace(minion.id, minion.pos);
+	}
+
+	const auto& newHeroes = GetEnemyHeroes();
+	for (auto& oldHero: mSuccesfulEnemyHeroes) {
+		const auto& oldHeroId = oldHero.first;
+		auto newIt = std::find_if(newHeroes.begin(), newHeroes.end(),
+			[&oldHeroId](const MAP_OBJECT& o) {
+				return o.id == oldHeroId;
+			});
+		if (newIt == newHeroes.end()) {
+			oldHero.second = 0;
+		}
+	}
+
+	for (const auto& minionRecord: mLastPositionOfMinions) {
+		auto newIt = newPositionOfMinions.find(minionRecord.first);
+		if (newIt != newPositionOfMinions.end()) {
+			// Minion survived, nothing to do
+			continue;
+		}
+		auto placeOfDeath = minionRecord.second;
+		auto objectsNearPlaceOfDeath =
+			GetEnemyObjectsNear(placeOfDeath, HERO_RANGE_SQ);
+		for (const auto& object: objectsNearPlaceOfDeath) {
+			if (object.t == UNIT_TYPE::HERO) {
+				++mSuccesfulEnemyHeroes[object.id];
+			}
+		}
+	}
+
+	mLastPositionOfMinions = std::move(newPositionOfMinions);
+}
+
+std::map<int, int> Hypno::GetMostEvilEnemyHeroes() const {
+	std::map<int, int> result;
+	auto currentEnemyHeroes = GetEnemyHeroes();
+	for (const auto& enemyHero: mSuccesfulEnemyHeroes) {
+		auto heroId = enemyHero.first;
+		auto it = std::find_if(currentEnemyHeroes.begin(), currentEnemyHeroes.end(),
+				[heroId](const auto& o) { return o.id == heroId; });
+		if (it != currentEnemyHeroes.end()) {
+			result.emplace(enemyHero);
+		}
+	}
+	return result;
+}
+
 void Hypno::Process() {
+	UpdateEnemyHeroes();
+	for (const auto& enemyHero: GetMostEvilEnemyHeroes()) {
+		std::cerr << "Hero " << enemyHero.first << " has been near: "
+			<< enemyHero.second << " of our Minion's kills" << std::endl;
+	}
 	for (auto& hero : GetControlledHeroes()) {
 		if (IsNearOurBase(hero)) {
 			auto fwd = "MID";
