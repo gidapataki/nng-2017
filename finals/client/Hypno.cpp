@@ -260,7 +260,7 @@ Matrix<double> Hypno::GetUnitHeatMap() const {
 				auto distance = std::abs(
 						mDistCache.GetDist(currentPosition, source.first));
 				result[currentPosition] +=
-						(double(effectWidth - distance)/distance) *
+						(double(effectWidth - distance)/effectWidth) *
 						double(source.second);
 			}
 		}
