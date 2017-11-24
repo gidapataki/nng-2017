@@ -14,12 +14,12 @@ public:
 	Hypno(std::string preferredOpponents="test");
 
 protected:
-	virtual std::string GetPassword() { return std::string("c6gR92#1"); }
-	virtual std::string GetPreferredOpponents() {
+	virtual std::string GetPassword() override { return std::string("c6gR92#1"); }
+	virtual std::string GetPreferredOpponents() override {
 		return mPreferredOpponents;
 	}
-	virtual bool NeedDebugLog() { return true; }
-	virtual void Process();
+	virtual bool NeedDebugLog() override { return true; }
+	virtual void Process() override;
 	void MatchEnd() override;
 	void UpdateEnemyHeroes();
 	std::map<int, int> GetMostEvilEnemyHeroes() const;
