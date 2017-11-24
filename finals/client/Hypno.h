@@ -44,6 +44,8 @@ protected:
 	std::vector<MAP_OBJECT> GetObjectsNear(
 		const Position& pos, int distance_sq) const;
 
+	std::vector<Position> GetNeighbours(const Position& pos) const;
+
 	bool CanOneHit(const MAP_OBJECT& unit) const;
 
 	int GetPreferredEnemyToAttack(const std::vector<MAP_OBJECT>& enemies) const;

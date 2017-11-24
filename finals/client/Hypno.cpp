@@ -19,8 +19,21 @@ void Hypno::AttackMove(int hero_id, const Position& pos) {
 	auto hero = mParser.GetUnitByID(hero_id);
 	auto possible_targets = GetEnemyObjectsNear(hero->pos, HERO_RANGE_SQ);
 	if (!possible_targets.empty()) {
-		// TODO sort somehow
-		Attack(hero_id, GetPreferredEnemyToAttack(possible_targets));
+		auto dmg_map = GetDamageMap();
+		auto hp_map = GetHPMap();
+
+		// try to backtrack
+		if (dmg_map[hero->pos] > 0) {
+			auto neighbours = GetNeighbours(hero->pos);
+			auto target_pos = *std::min_element(begin(neighbours), end(neighbours),
+				[&](auto lhs, auto rhs) {
+					return dmg_map[lhs] < dmg_map[rhs];
+				}
+			);
+			Move(hero_id, target_pos);
+		} else {
+			Attack(hero_id, GetPreferredEnemyToAttack(possible_targets));
+		}
 	} else {
 		Move(hero_id, mDistCache.GetNextTowards(hero->pos, pos));
 	}
@@ -141,6 +154,25 @@ std::vector<MAP_OBJECT> Hypno::GetObjectsNear(
 	return GetObjects([&](const MAP_OBJECT& obj) {
 		return pos.DistSquare(obj.pos) <= distance_sq;
 	});
+}
+
+std::vector<Position> Hypno::GetNeighbours(const Position& pos) const {
+	std::vector<Position> result;
+	for (int y = pos.y - 1; y <= pos.y + 1; ++y) {
+		for (int x = pos.x - 1; x <= pos.x + 1; ++x) {
+			if (x == pos.x && y == pos.y) {
+				continue;
+			}
+			if (x < 0 || x > MaxX() || y < 0 || y > MaxY()) {
+				continue;
+			}
+			if (mParser.GetAt(Position{x, y}) == PARSER::GROUND_TYPE::WALL) {
+				continue;
+			}
+			result.emplace_back(x, y);
+		}
+	}
+	return result;
 }
 
 bool Hypno::CanOneHit(const MAP_OBJECT& unit) const {
