@@ -22,10 +22,17 @@ protected:
 	void AttackTop(const MAP_OBJECT& hero);
 
 	Matrix<int> GetHeatMap() const;
+	Matrix<int> GetTowerHeatMap() const;
+	Matrix<int> GetUnitHeatMap() const;
 
 	std::vector<MAP_OBJECT> GetOurTurrets() const;
 	std::vector<MAP_OBJECT> GetEnemyTurrets() const;
+	std::vector<MAP_OBJECT> GetHeroes(int side) const;
 	std::vector<MAP_OBJECT> GetOurHeroes() const;
+	std::vector<MAP_OBJECT> GetEnemyHeroes() const;
+	std::vector<MAP_OBJECT> GetMinions(int side) const;
+	std::vector<MAP_OBJECT> GetOurMinions() const;
+	std::vector<MAP_OBJECT> GetEnemyMinions() const;
 	std::vector<MAP_OBJECT> GetObjects(std::function<bool(const MAP_OBJECT&)> fn) const;
 	std::vector<MAP_OBJECT> GetEnemyObjects() const;
 	std::vector<MAP_OBJECT> GetEnemyObjectsNear(

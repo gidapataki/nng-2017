@@ -34,12 +34,12 @@ void Hypno::Process() {
 	}
 }
 
-std::vector<MAP_OBJECT> Hypno::GetOurHeroes() const {
+std::vector<MAP_OBJECT> Hypno::GetHeroes(int side) const {
 	std::vector<MAP_OBJECT> vec;
 	std::set<int> ids;
 
 	for (auto& cc : mParser.Controllers) {
-		if (cc.controller_id == 0) {
+		if (cc.controller_id == side) {
 			ids.insert(cc.hero_id);
 		}
 	}
@@ -47,6 +47,37 @@ std::vector<MAP_OBJECT> Hypno::GetOurHeroes() const {
 	return GetObjects([&](const MAP_OBJECT& unit) {
 		return (unit.t == HERO && ids.count(unit.id) > 0);
 	});
+}
+
+std::vector<MAP_OBJECT> Hypno::GetOurHeroes() const {
+	return GetHeroes(0);
+}
+
+std::vector<MAP_OBJECT> Hypno::GetEnemyHeroes() const {
+	return GetHeroes(1);
+}
+
+std::vector<MAP_OBJECT> Hypno::GetMinions(int side) const {
+	std::vector<MAP_OBJECT> vec;
+	std::set<int> ids;
+
+	for (auto& cc : mParser.Controllers) {
+		if (cc.controller_id == side) {
+			ids.insert(cc.hero_id);
+		}
+	}
+
+	return GetObjects([&](const MAP_OBJECT& unit) {
+		return (unit.t == MINION && ids.count(unit.id) > 0);
+	});
+}
+
+std::vector<MAP_OBJECT> Hypno::GetOurMinions() const {
+	return GetMinions(0);
+}
+
+std::vector<MAP_OBJECT> Hypno::GetEnemyMinions() const {
+	return GetMinions(1);
 }
 
 std::vector<MAP_OBJECT> Hypno::GetOurTurrets() const {
@@ -134,6 +165,10 @@ std::vector<MAP_OBJECT> Hypno::GetObjects(std::function<bool(const MAP_OBJECT&)>
 }
 
 Matrix<int> Hypno::GetHeatMap() const {
+	return GetTowerHeatMap() + GetUnitHeatMap();
+}
+
+Matrix<int> Hypno::GetTowerHeatMap() const {
 	Matrix<int> result{
 			static_cast<Matrix<int>::size_type>(mParser.w),
 			static_cast<Matrix<int>::size_type>(mParser.h),
@@ -144,9 +179,6 @@ Matrix<int> Hypno::GetHeatMap() const {
 	static constexpr int enemy = 20;
 
 	static constexpr int tower = 40;
-	static constexpr int minion = 5;
-
-	static constexpr int neighbouring = 1;
 
 	for (const auto& enemyTurret: GetEnemyTurrets()) {
 		for (const auto& cell: GetObjectsNear(enemyTurret.pos, TURRET_RANGE_SQ))
@@ -160,6 +192,38 @@ Matrix<int> Hypno::GetHeatMap() const {
 		{
 			result[cell.pos] -= friendly * tower;
 		}
+	}
+
+	return result;
+}
+
+Matrix<int> Hypno::GetUnitHeatMap() const {
+	Matrix<int> result{
+			static_cast<Matrix<int>::size_type>(mParser.w),
+			static_cast<Matrix<int>::size_type>(mParser.h),
+			0
+	};
+
+	static constexpr int friendly = 10;
+	static constexpr int enemy = 20;
+
+	static constexpr int minion = 5;
+	static constexpr int hero = 10; // TODO: Make this depend on level/hp
+
+	for (const auto& ourHero: GetOurHeroes()) {
+		result[ourHero.pos] -= friendly * hero;
+	}
+
+	for (const auto& enemyHero: GetEnemyHeroes()) {
+		result[enemyHero.pos] += enemy * hero;
+	}
+
+	for (const auto& ourMinion: GetOurMinions()) {
+		result[ourMinion.pos] -= friendly * minion;
+	}
+
+	for (const auto& enemyMinion: GetEnemyMinions()) {
+		result[enemyMinion.pos] += enemy * minion;
 	}
 
 	return result;
