@@ -179,14 +179,14 @@ std::vector<MAP_OBJECT> Hypno::GetObjects(std::function<bool(const MAP_OBJECT&)>
 	return vec;
 }
 
-Matrix<int> Hypno::GetHeatMap() const {
+Matrix<double> Hypno::GetHeatMap() const {
 	return GetTowerHeatMap() + GetUnitHeatMap();
 }
 
-Matrix<int> Hypno::GetTowerHeatMap() const {
-	Matrix<int> result{
-			static_cast<Matrix<int>::size_type>(mParser.w),
-			static_cast<Matrix<int>::size_type>(mParser.h),
+Matrix<double> Hypno::GetTowerHeatMap() const {
+	Matrix<double> result{
+			static_cast<Matrix<double>::size_type>(mParser.w),
+			static_cast<Matrix<double>::size_type>(mParser.h),
 			0
 	};
 
@@ -212,10 +212,10 @@ Matrix<int> Hypno::GetTowerHeatMap() const {
 	return result;
 }
 
-Matrix<int> Hypno::GetUnitHeatMap() const {
-	Matrix<int> result{
-			static_cast<Matrix<int>::size_type>(mParser.w),
-			static_cast<Matrix<int>::size_type>(mParser.h),
+Matrix<double> Hypno::GetUnitHeatMap() const {
+	Matrix<double> result{
+			static_cast<Matrix<double>::size_type>(mParser.w),
+			static_cast<Matrix<double>::size_type>(mParser.h),
 			0
 	};
 
@@ -260,7 +260,8 @@ Matrix<int> Hypno::GetUnitHeatMap() const {
 				auto distance = std::abs(
 						mDistCache.GetDist(currentPosition, source.first));
 				result[currentPosition] +=
-						((effectWidth - distance)/distance) * result[source.first];
+						(double(effectWidth - distance)/distance) *
+						double(source.second);
 			}
 		}
 	}

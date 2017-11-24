@@ -21,9 +21,9 @@ protected:
 	void AttackMove(int hero_id, const Position& pos);
 	void AttackTop(const MAP_OBJECT& hero);
 
-	Matrix<int> GetHeatMap() const;
-	Matrix<int> GetTowerHeatMap() const;
-	Matrix<int> GetUnitHeatMap() const;
+	Matrix<double> GetHeatMap() const;
+	Matrix<double> GetTowerHeatMap() const;
+	Matrix<double> GetUnitHeatMap() const;
 
 	std::vector<MAP_OBJECT> GetOurTurrets() const;
 	std::vector<MAP_OBJECT> GetEnemyTurrets() const;
