@@ -6,8 +6,7 @@
 #include <algorithm>
 
 
-CLIENT* CreateClient()
-{
+CLIENT* CreateClient() {
 	return new Hypno();
 }
 
@@ -48,15 +47,51 @@ void Hypno::AttackTop(const MAP_OBJECT& hero) {
 			AttackMove(hero.id, {MaxX() - 1, MaxY() - 1});
 		} else {
 			auto target = turrets[0].pos;
-			target.x -= 3;
 			AttackMove(hero.id, target);
 		}
 	}
 }
 
+void Hypno::AttackDown(const MAP_OBJECT& hero) {
+	if (hero.pos.x < MaxX() - 4 && hero.pos.y < 6) {
+		AttackMove(hero.id, {MaxX() - 4, 4});
+	} else {
+		auto turrets = GetRightEnemyTurrets();
+		if (turrets.empty()) {
+			AttackMove(hero.id, {MaxX() - 1, MaxY() - 1});
+		} else {
+			auto target = turrets[0].pos;
+			AttackMove(hero.id, target);
+		}
+	}
+}
+
+void Hypno::AttackMid(const MAP_OBJECT& hero) {
+
+}
+
 void Hypno::Process() {
 	for (auto& hero : GetOurHeroes()) {
-		AttackTop(hero);
+		if (IsNearOurBase(hero)) {
+			auto prefer = PreferLane(hero);
+			if (prefer > 0) {
+				AttackTop(hero);
+			} else if (prefer < 0) {
+				AttackDown(hero);
+			} else {
+				AttackMid(hero);
+			}
+		} else {
+			auto lane = GetLane(hero.pos);
+			const int lane_sep = 13;
+			if (lane > lane_sep) {
+				AttackTop(hero);
+			} else if (lane < lane_sep) {
+				AttackDown(hero);
+			} else {
+				AttackMid(hero);
+			}
+		}
 	}
 }
 
@@ -406,6 +441,19 @@ std::vector<MAP_OBJECT> Hypno::GetTopEnemyTurrets() const {
 	}));
 }
 
+std::vector<MAP_OBJECT> Hypno::GetRightEnemyTurrets() const {
+	return OrderByY(GetObjects([&](const MAP_OBJECT& unit) {
+		return unit.t == TURRET && unit.side == 1 && IsRightLane(unit.pos);
+	}));
+}
+
+std::vector<MAP_OBJECT> Hypno::GetMidEnemyTurrets() const {
+	return OrderByX(GetObjects([&](const MAP_OBJECT& unit) {
+		auto lane = std::abs(GetLane(unit.pos));
+		return unit.t == TURRET && unit.side == 1 && lane < 4;
+	}));
+}
+
 std::vector<MAP_OBJECT> Hypno::OrderByX(
 	std::vector<MAP_OBJECT> units, bool reverse) const
 {
@@ -446,3 +494,94 @@ int Hypno::MaxY() const {
 	return mParser.h - 1;
 }
 
+int Hypno::GetLane(const Position& pos) const {
+	return pos.y - pos.x;
+}
+
+int Hypno::GetAdvance(const Position& pos) const {
+	return pos.x + pos.y;
+}
+
+int Hypno::PreferLane(const MAP_OBJECT& hero) const {
+	const int advance_max = MaxX() + MaxY();
+	const int lane_sep = 13;
+	const int advance_low = 30;
+	const int advance_high = advance_max - advance_low;
+	const int mod_high = -10;
+	const int mod_low = 5;
+	const int mod_mid_high = -5;
+	const int mod_mid_low = 8;
+
+	const int mod_enemy_low = 10;
+	const int mod_enemy_high = 0;
+	const int mod_enemy_mid_low = 10;
+	const int mod_enemy_mid_high = 0;
+
+	int top = 100;
+	int mid = 110;
+	int down = 100;
+
+	for (auto& unit : GetOurHeroes()) {
+		if (unit.id == hero.id) {
+			continue;
+		}
+
+		auto lane = GetLane(unit.pos);
+		auto advance = GetAdvance(unit.pos);
+
+		if (lane > lane_sep) {
+			if (advance > advance_high) {
+				top += mod_high;
+			} else if (advance > advance_low) {
+				top += mod_low;
+			}
+		} else if (lane < -lane_sep) {
+			if (advance > advance_high) {
+				down += mod_high;
+			} else if (advance > advance_low) {
+				down += mod_low;
+			}
+		} else {
+			if (advance > advance_high) {
+				mid += mod_mid_high;
+			} else if (advance > advance_low) {
+				mid += mod_mid_low;
+			}
+		}
+	}
+
+	for (auto& unit : GetEnemyHeroes()) {
+		auto lane = GetLane(unit.pos);
+		auto advance = GetAdvance(unit.pos);
+
+		if (lane > lane_sep) {
+			if (advance < advance_low) {
+				top += mod_enemy_low;
+			} else if (advance < advance_high) {
+				top += mod_enemy_high;
+			}
+		} else if (lane < -lane_sep) {
+			if (advance < advance_low) {
+				down += mod_enemy_low;
+			} else if (advance < advance_high) {
+				down += mod_enemy_high;
+			}
+		} else {
+			if (advance < advance_low) {
+				mid += mod_enemy_mid_low;
+			} else if (advance < advance_high) {
+				mid += mod_enemy_mid_high;
+			}
+		}
+	}
+
+	if (mid >= top && mid >= down) {
+		return 0;
+	} else {
+		return top > down ? 1 : -1;
+	}
+}
+
+bool Hypno::IsNearOurBase(const MAP_OBJECT& unit) const {
+	return unit.pos.x < 13 || unit.pos.y < 13;
+}

@@ -20,6 +20,8 @@ protected:
 
 	void AttackMove(int hero_id, const Position& pos);
 	void AttackTop(const MAP_OBJECT& hero);
+	void AttackDown(const MAP_OBJECT& hero);
+	void AttackMid(const MAP_OBJECT& hero);
 
 	Matrix<double> GetDamageMap() const;
 	Matrix<double> GetHPMap() const;
@@ -56,6 +58,8 @@ protected:
 	bool IsRightLane(const Position& pos) const;
 
 	std::vector<MAP_OBJECT> GetTopEnemyTurrets() const;
+	std::vector<MAP_OBJECT> GetRightEnemyTurrets() const;
+	std::vector<MAP_OBJECT> GetMidEnemyTurrets() const;
 
 	std::vector<MAP_OBJECT> OrderByX(std::vector<MAP_OBJECT> units, bool reverse=false) const;
 	std::vector<MAP_OBJECT> OrderByY(std::vector<MAP_OBJECT> units, bool reverse=false) const;
@@ -66,4 +70,8 @@ protected:
 
 	int MaxX() const;
 	int MaxY() const;
+	int GetLane(const Position& pos) const;
+	int GetAdvance(const Position& pos) const;
+	int PreferLane(const MAP_OBJECT& hero) const;
+	bool IsNearOurBase(const MAP_OBJECT& unit) const;
 };
