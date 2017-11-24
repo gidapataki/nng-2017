@@ -2,10 +2,12 @@
 #include "Position.h"
 #include <algorithm>
 #include <stdexcept>
+#include <boost/assert.hpp>
+#include <boost/operators.hpp>
 
 
 template<class T>
-class Matrix {
+class Matrix : boost::addable<Matrix<T>> {
 public:
     typedef T               value_type;
     typedef T*              pointer;
@@ -34,8 +36,8 @@ public:
     reference operator()(size_type x, size_type y);
     const_reference operator()(size_type x, size_type y) const;
 
-	reference operator[](const Position& at);
-	const_reference operator[](const Position& at) const;
+    reference operator[](const Position& at);
+    const_reference operator[](const Position& at) const;
 
     void set_if_inbounds(size_type x, size_type y, const value_type& val);
 
@@ -49,6 +51,7 @@ public:
     size_type height() const;
 
     void swap(Matrix<T>& rhs);
+    Matrix& operator+=(const Matrix& o);
 protected:
     size_type width_;
     size_type height_;
@@ -195,4 +198,13 @@ void Matrix<T>::swap(Matrix<T>& rhs) {
     std::swap(width_, rhs.width_);
     std::swap(height_, rhs.height_);
     std::swap(data_, rhs.data_);
+}
+
+template<class T> inline
+Matrix<T>& Matrix<T>::operator+=(const Matrix& o) {
+	BOOST_ASSERT(width_ == o.width_ && height_ == o.height_);
+	for (std::size_t i=0; i<width_*height_; ++i) {
+		data_[i] += o.data_[i];
+	}
+	return *this;
 }
