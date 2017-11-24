@@ -75,7 +75,7 @@ int PARSER::GetEnemyHeroMaxHP() const {
 	return GetHeroMaxHP(1);
 }
 
-int PARSER::GetMaxHPOfunit(const MAP_OBJECT& unit) const {
+int PARSER::GetMaxHPOfUnit(const MAP_OBJECT& unit) const {
 	switch (unit.t) {
 		case UNIT_TYPE::HERO: return GetHeroMaxHP(unit.side);
 		case UNIT_TYPE::MINION: return MINION_MAX_HP;

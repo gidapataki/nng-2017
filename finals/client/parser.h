@@ -104,5 +104,5 @@ public:
 	int GetOurHeroMaxHP() const;
 	int GetEnemyHeroMaxHP() const;
 
-	int GetMaxHPOfunit(const MAP_OBJECT& unit) const;
+	int GetMaxHPOfUnit(const MAP_OBJECT& unit) const;
 };
