@@ -41,22 +41,30 @@ void Hypno::AttackMove(int hero_id, const Position& pos) {
 }
 
 void Hypno::AttackTop(const MAP_OBJECT& hero) {
-	auto turrets = GetTopEnemyTurrets();
-	if (turrets.empty()) {
-		AttackMove(hero.id, {MaxX() - 1, MaxY() - 1});
+	if (IsNearOurBase(hero)) {
+		AttackMove(hero.id, {4, MaxY() - 4});
 	} else {
-		auto target = turrets[0].pos;
-		AttackMove(hero.id, target);
+		auto turrets = GetTopEnemyTurrets();
+		if (turrets.empty()) {
+			AttackMove(hero.id, {MaxX() - 1, MaxY() - 1});
+		} else {
+			auto target = turrets[0].pos;
+			AttackMove(hero.id, target);
+		}
 	}
 }
 
 void Hypno::AttackDown(const MAP_OBJECT& hero) {
-	auto turrets = GetRightEnemyTurrets();
-	if (turrets.empty()) {
-		AttackMove(hero.id, {MaxX() - 1, MaxY() - 1});
+	if (IsNearOurBase(hero)) {
+		AttackMove(hero.id, {MaxX() - 4, 4});
 	} else {
-		auto target = turrets[0].pos;
-		AttackMove(hero.id, target);
+		auto turrets = GetRightEnemyTurrets();
+		if (turrets.empty()) {
+			AttackMove(hero.id, {MaxX() - 1, MaxY() - 1});
+		} else {
+			auto target = turrets[0].pos;
+			AttackMove(hero.id, target);
+		}
 	}
 }
 
@@ -72,9 +80,9 @@ void Hypno::AttackMid(const MAP_OBJECT& hero) {
 
 void Hypno::Process() {
 	for (auto& hero : GetOurHeroes()) {
-		if (IsNearOurBase(hero)) {
+		if (IsNearOurBase(hero, 15)) {
 			auto prefer = PreferLane(hero);
-			std::cerr << "PREFER " << hero.id << " " << prefer << std::endl;
+			std::cerr << "P " << hero.id << " " << prefer << std::endl;
 			if (prefer > 0) {
 				AttackTop(hero);
 			} else if (prefer < 0) {
@@ -85,7 +93,7 @@ void Hypno::Process() {
 		} else {
 			auto lane = GetLane(hero.pos);
 			const int lane_sep = 13;
-			std::cerr << "CONTINUE " << hero.id << " " << lane << std::endl;
+			std::cerr << "C " << hero.id << " " << lane << std::endl;
 			if (lane > lane_sep) {
 				AttackTop(hero);
 			} else if (lane < -lane_sep) {
@@ -508,19 +516,19 @@ int Hypno::PreferLane(const MAP_OBJECT& hero) const {
 	const int advance_low = 30;
 	const int advance_high = advance_max - advance_low;
 
-	const int mod_high = 0;
-	const int mod_mid_high = 0;
+	const int mod_high = -2;
+	const int mod_mid_high = -6;
 
-	const int mod_low = 10;
-	const int mod_mid_low = 10;
+	const int mod_low = 4;
+	const int mod_mid_low = 3;
 
-	const int mod_enemy_low = 0;
-	const int mod_enemy_high = 0;
-	const int mod_enemy_mid_low = 0;
-	const int mod_enemy_mid_high = 0;
+	const int mod_enemy_low = 6;
+	const int mod_enemy_high = 3;
+	const int mod_enemy_mid_low = 4;
+	const int mod_enemy_mid_high = 2;
 
 	int top = 0;
-	int mid = 10;
+	int mid = 2;
 	int down = 0;
 
 	for (auto& unit : GetOurHeroes()) {
@@ -584,6 +592,6 @@ int Hypno::PreferLane(const MAP_OBJECT& hero) const {
 	}
 }
 
-bool Hypno::IsNearOurBase(const MAP_OBJECT& unit) const {
-	return unit.pos.x < 13 || unit.pos.y < 13;
+bool Hypno::IsNearOurBase(const MAP_OBJECT& unit, int dst) const {
+	return unit.pos.x < dst || unit.pos.y < dst;
 }
