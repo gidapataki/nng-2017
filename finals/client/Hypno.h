@@ -16,5 +16,7 @@ protected:
 	virtual bool NeedDebugLog() { return true; }
 	virtual void Process();
 
+	std::vector<MAP_OBJECT> GetOurTurrets();
+	std::vector<MAP_OBJECT> GetEnemyTurrets();
 	std::vector<int> GetOurHeroes();
 };
