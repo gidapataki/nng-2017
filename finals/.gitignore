@@ -1,2 +1,6 @@
 build/
 .sugoi.*
+debug.log
+distcache.bin
+map.txt
+players.txt
