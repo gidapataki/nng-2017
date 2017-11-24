@@ -12,6 +12,6 @@ include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 add_executable(moba
     client/Client.cpp
     client/distcache.cpp
-    client/MyClient.cpp
+    client/Hypno.cpp
     client/parser.cpp
 )
