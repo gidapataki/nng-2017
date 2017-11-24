@@ -501,6 +501,9 @@ Matrix<double> Hypno::GetHPMap() const {
 
 		int range_sq = mParser.GetAttackRangeSquaredOfUnit(unit);
 		int hp = unit.hp;
+		if (unit.t == UNIT_TYPE::HERO && unit.side == 0) {
+			hp = mParser.GetMaxHPOfUnit(unit);
+		}
 
 		const int radius = 6;
 		for (int y = unit.pos.y - radius; y <= unit.pos.y + radius; ++y) {
