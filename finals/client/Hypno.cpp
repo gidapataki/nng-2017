@@ -5,7 +5,22 @@ Hypno::Hypno() {
 	// nothing to see here
 }
 
-void Hypno::Process() {
+void Hypno::AttackMove(int hero_id, const Position& pos) {
+
+}
+
+std::vector<MAP_OBJECT> Hypno::GetEnemyObjects() const {
+	std::vector<MAP_OBJECT> objects;
+	for (auto& obj : mParser.Units) {
+		if (obj.side != 0) {
+			objects.push_back(obj);
+		}
+	}
+	return objects;
+}
+
+void Hypno::Process()
+{
 }
 
 CLIENT* CreateClient()
