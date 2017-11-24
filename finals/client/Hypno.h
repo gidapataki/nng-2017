@@ -15,7 +15,7 @@ public:
 protected:
 	virtual std::string GetPassword() { return std::string("c6gR92#1"); }
 	virtual std::string GetPreferredOpponents() {
-		// comment out those which you dont need
+		return mPreferredOpponents;
 	}
 	virtual bool NeedDebugLog() { return true; }
 	virtual void Process();
