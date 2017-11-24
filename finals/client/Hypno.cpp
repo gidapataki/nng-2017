@@ -140,6 +140,7 @@ bool Hypno::CanOneHit(const MAP_OBJECT& unit) const {
 }
 
 int Hypno::GetPreferredEnemyToAttack(const std::vector<MAP_OBJECT>& enemies) const {
+	assert(!enemies.empty());
 	// one hit a turret if we can
 	for (auto& enemy : enemies) {
 		if (enemy.t == UNIT_TYPE::TURRET && CanOneHit(enemy)) {
