@@ -234,6 +234,20 @@ std::map<int, int> Hypno::GetMostEvilEnemyHeroes() const {
 }
 
 void Hypno::Process() {
+#if 0
+	if (mParser.tick == 5) {
+		for (auto& u : GetTopOurTurrets()) {
+			std::cerr << "TURRET TOP " << u.id << " " << u.pos << std::endl;
+		}
+		for (auto& u : GetMidOurTurrets()) {
+			std::cerr << "TURRET MID " << u.id << " " << u.pos << std::endl;
+		}
+		for (auto& u : GetDownOurTurrets()) {
+			std::cerr << "TURRET DOWN " << u.id << " " << u.pos << std::endl;
+		}
+	}
+#endif
+
 	enemy_hp_map.clear();
 	for (auto& enemy : GetEnemyObjects()) {
 		enemy_hp_map[enemy.id] = enemy.hp;
