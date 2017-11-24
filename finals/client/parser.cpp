@@ -101,7 +101,7 @@ int PARSER::GetDamageOfUnit(const MAP_OBJECT& unit) const {
 	switch (unit.t) {
 		case UNIT_TYPE::HERO: return GetHeroDamage(unit.side);
 		case UNIT_TYPE::MINION: return 10; // Is there no constant for this?
-		case UNIT_TYPE::TURRET: return TURRET_MAX_HP;
+		case UNIT_TYPE::TURRET: return 100;
 		case UNIT_TYPE::BASE: return 0;
 	}
 	std::cerr << "Unknown unit type " << unit.t << std::endl;
