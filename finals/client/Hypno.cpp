@@ -845,15 +845,15 @@ bool Hypno::IsNearOurBase(const MAP_OBJECT& unit, int dst) const {
 bool Hypno::IsAtTop(const MAP_OBJECT& unit) const {
 	auto pos = unit.pos;
 	return
-		(pos.y > 12 && pos.x < 7) ||
-		(pos.y > MaxY() - 7 && pos.x < MaxX() - 12);
+		(pos.y > 12 && pos.x < 8) ||
+		(pos.y > MaxY() - 8 && pos.x < MaxX() - 12);
 }
 
 bool Hypno::IsAtDown(const MAP_OBJECT& unit) const {
 	auto pos = unit.pos;
 	return
-		(pos.x > 12 && pos.y < 7) ||
-		(pos.x > MaxX() - 7 && pos.y < MaxY() - 12);
+		(pos.x > 12 && pos.y < 8) ||
+		(pos.x > MaxX() - 8 && pos.y < MaxY() - 12);
 }
 
 bool Hypno::IsAtMid(const MAP_OBJECT& unit) const {
