@@ -57,6 +57,7 @@ protected:
 
 	static bool LessByX(const MAP_OBJECT& lhs, const MAP_OBJECT& rhs);
 	static bool LessByY(const MAP_OBJECT& lhs, const MAP_OBJECT& rhs);
+	static bool LessByHp(const MAP_OBJECT& lhs, const MAP_OBJECT& rhs);
 
 	int MaxX() const;
 	int MaxY() const;

@@ -147,7 +147,7 @@ int Hypno::GetPreferredEnemyToAttack(const std::vector<MAP_OBJECT>& enemies) con
 		}
 	}
 
-	// one hit an enemy if we can
+	// one hit a hero if we can
 	for (auto& enemy : enemies) {
 		if (enemy.t == UNIT_TYPE::HERO && CanOneHit(enemy)) {
 			return enemy.id;
@@ -161,7 +161,8 @@ int Hypno::GetPreferredEnemyToAttack(const std::vector<MAP_OBJECT>& enemies) con
 		}
 	}
 
-	return enemies.front().id;
+	// hit the unit with the least hp
+	return std::min_element(begin(enemies), end(enemies), LessByHp)->id;
 }
 
 std::vector<MAP_OBJECT> Hypno::GetObjects(std::function<bool(const MAP_OBJECT&)> fn) const {
@@ -290,9 +291,14 @@ bool Hypno::LessByY(const MAP_OBJECT& lhs, const MAP_OBJECT& rhs) {
 	return lhs.pos.y < rhs.pos.y;
 }
 
+bool Hypno::LessByHp(const MAP_OBJECT& lhs, const MAP_OBJECT& rhs) {
+	return lhs.hp < rhs.hp;
+}
+
 int Hypno::MaxX() const {
 	return mParser.w - 1;
 }
+
 int Hypno::MaxY() const {
 	return mParser.h - 1;
 }
