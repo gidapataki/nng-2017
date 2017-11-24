@@ -221,21 +221,42 @@ Matrix<int> Hypno::GetUnitHeatMap() const {
 
 	static constexpr int minion = 5;
 	static constexpr int hero = 10; // TODO: Make this depend on level/hp
+	static constexpr int effectWidth = 5;
 
+	std::vector<Position> sources;
 	for (const auto& ourHero: GetOurHeroes()) {
 		result[ourHero.pos] -= friendly * hero;
+		sources.push_back(ourHero.pos);
 	}
 
 	for (const auto& enemyHero: GetEnemyHeroes()) {
 		result[enemyHero.pos] += enemy * hero;
+		sources.push_back(enemyHero.pos);
 	}
 
 	for (const auto& ourMinion: GetOurMinions()) {
 		result[ourMinion.pos] -= friendly * minion;
+		sources.push_back(ourMinion.pos);
 	}
 
 	for (const auto& enemyMinion: GetEnemyMinions()) {
 		result[enemyMinion.pos] += enemy * minion;
+		sources.push_back(enemyMinion.pos);
+	}
+
+	for (const auto& source: sources) {
+		for (int x = source.x-effectWidth; x < source.x+effectWidth + 1; ++x) {
+			for (int y = source.y-effectWidth; y < source.y+effectWidth + 1; ++y) {
+				if (x < 0 || x > MaxX() || y < 0 || y > MaxY()) {
+					continue;
+				}
+				auto currentPosition = Position{x, y};
+				auto distance = std::abs(
+						mDistCache.GetDist(currentPosition, source));
+				result[currentPosition] +=
+						((effectWidth - distance)/distance) * result[source];
+			}
+		}
 	}
 
 	return result;

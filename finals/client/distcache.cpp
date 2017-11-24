@@ -133,7 +133,7 @@ void DISTCACHE::CreateFromParser(PARSER &Parser)
 			}
 }
 
-int DISTCACHE::GetDist(const Position &p0, const Position &p1)
+int DISTCACHE::GetDist(const Position &p0, const Position &p1) const
 {
 	if (!mMap[p0.x+p0.y*map_dx] || !mMap[p1.x+p1.y*map_dx]) return -1;
 	return mDistMap[p1.x+p1.y*map_dx][p0.x+p0.y*map_dx];

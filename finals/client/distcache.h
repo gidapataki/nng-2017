@@ -14,6 +14,6 @@ public:
 	bool LoadFromFile(const char *filename);
 	void SaveToFile(const char *filename);
 	void CreateFromParser(PARSER &Parser);
-	int GetDist(const Position &p0, const Position &p1);
+	int GetDist(const Position &p0, const Position &p1) const;
 	Position GetNextTowards(const Position &p0, const Position &p1);
 };
