@@ -71,10 +71,18 @@ protected:
 
 	std::vector<MAP_OBJECT> OrderByX(std::vector<MAP_OBJECT> units, bool reverse=false) const;
 	std::vector<MAP_OBJECT> OrderByY(std::vector<MAP_OBJECT> units, bool reverse=false) const;
+	std::vector<MAP_OBJECT> OrderByDst(std::vector<MAP_OBJECT> units, bool reverse=false) const;
+
+	std::vector<MAP_OBJECT> GetTopMinions() const;
+	std::vector<MAP_OBJECT> GetDownMinions() const;
+	std::vector<MAP_OBJECT> GetMidMinions() const;
 
 	static bool LessByX(const MAP_OBJECT& lhs, const MAP_OBJECT& rhs);
 	static bool LessByY(const MAP_OBJECT& lhs, const MAP_OBJECT& rhs);
 	static bool LessByHp(const MAP_OBJECT& lhs, const MAP_OBJECT& rhs);
+
+	using ObjectCompare = std::function<bool(const MAP_OBJECT&, const MAP_OBJECT&)>;
+	ObjectCompare LessByDst() const;
 
 	int MaxX() const;
 	int MaxY() const;
@@ -86,6 +94,7 @@ protected:
 
 	bool IsAtTop(const MAP_OBJECT& unit) const;
 	bool IsAtDown(const MAP_OBJECT& unit) const;
+	bool IsAtMid(const MAP_OBJECT& unit) const;
 	bool HasTopHero() const;
 	bool HasDownHero() const;
 	bool IsEnemyInside() const;

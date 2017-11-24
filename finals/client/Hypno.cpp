@@ -116,6 +116,14 @@ void Hypno::AttackTop(const MAP_OBJECT& hero) {
 	if (IsNearOurBase(hero)) {
 		AttackMove(hero.id, {4, MaxY() - 4});
 	} else {
+		auto minions = OrderByDst(GetTopMinions(), true);
+		if (minions.size() < 2) {
+			AttackMove(hero.id, {1, 11});
+		} else {
+			AttackMove(hero.id, minions[1].pos);
+		}
+
+#if 0
 		auto turrets = GetTopEnemyTurrets();
 		if (turrets.empty()) {
 			AttackMove(hero.id, {MaxX() - 1, MaxY() - 1});
@@ -123,6 +131,7 @@ void Hypno::AttackTop(const MAP_OBJECT& hero) {
 			auto target = turrets[0].pos;
 			AttackMove(hero.id, target);
 		}
+#endif
 	}
 }
 
@@ -130,6 +139,13 @@ void Hypno::AttackDown(const MAP_OBJECT& hero) {
 	if (IsNearOurBase(hero)) {
 		AttackMove(hero.id, {MaxX() - 4, 4});
 	} else {
+		auto minions = OrderByDst(GetDownMinions(), true);
+		if (minions.size() < 2) {
+			AttackMove(hero.id, {11, 1});
+		} else {
+			AttackMove(hero.id, minions[1].pos);
+		}
+#if 0
 		auto turrets = GetRightEnemyTurrets();
 		if (turrets.empty()) {
 			AttackMove(hero.id, {MaxX() - 1, MaxY() - 1});
@@ -137,6 +153,7 @@ void Hypno::AttackDown(const MAP_OBJECT& hero) {
 			auto target = turrets[0].pos;
 			AttackMove(hero.id, target);
 		}
+#endif
 	}
 }
 
@@ -145,8 +162,16 @@ void Hypno::AttackMid(const MAP_OBJECT& hero) {
 	if (turrets.empty()) {
 		AttackMove(hero.id, {MaxX() - 1, MaxY() - 1});
 	} else {
+		auto minions = OrderByDst(GetMidMinions(), true);
+		if (minions.size() < 2) {
+			AttackMove(hero.id, {9, 9});
+		} else {
+			AttackMove(hero.id, minions[1].pos);
+		}
+#if 0
 		auto target = turrets[0].pos;
 		AttackMove(hero.id, target);
+#endif
 	}
 }
 
@@ -562,6 +587,16 @@ std::vector<MAP_OBJECT> Hypno::OrderByX(
 	return units;
 }
 
+std::vector<MAP_OBJECT> Hypno::OrderByDst(
+	std::vector<MAP_OBJECT> units, bool reverse) const
+{
+	std::sort(units.begin(), units.end(), LessByDst());
+	if (reverse) {
+		std::reverse(units.begin(), units.end());
+	}
+	return units;
+}
+
 std::vector<MAP_OBJECT> Hypno::OrderByY(
 	 std::vector<MAP_OBJECT> units, bool reverse) const
 {
@@ -582,6 +617,15 @@ bool Hypno::LessByY(const MAP_OBJECT& lhs, const MAP_OBJECT& rhs) {
 
 bool Hypno::LessByHp(const MAP_OBJECT& lhs, const MAP_OBJECT& rhs) {
 	return lhs.hp < rhs.hp;
+}
+
+Hypno::ObjectCompare Hypno::LessByDst() const {
+	return [&](const MAP_OBJECT& lhs, const MAP_OBJECT& rhs) {
+		auto target = GetEnemyBase().pos;
+		return
+			mDistCache.GetDist(lhs.pos, target) <
+			mDistCache.GetDist(rhs.pos, target);
+	};
 }
 
 int Hypno::MaxX() const {
@@ -701,6 +745,14 @@ bool Hypno::IsAtDown(const MAP_OBJECT& unit) const {
 		(pos.x > MaxX() - 7 && pos.y < MaxY() - 12);
 }
 
+bool Hypno::IsAtMid(const MAP_OBJECT& unit) const {
+	auto pos = unit.pos;
+	return
+		(pos.x > 12 || pos.y > 12) &&
+		!IsAtTop(unit) && !IsAtDown(unit);
+}
+
+
 bool Hypno::HasTopHero() const {
 	for (auto& unit : GetOurHeroes()) {
 		if (IsAtTop(unit)) {
@@ -726,4 +778,35 @@ bool Hypno::IsEnemyInside() const {
 		}
 	}
 	return false;
+}
+
+std::vector<MAP_OBJECT> Hypno::GetTopMinions() const {
+	std::vector<MAP_OBJECT> vec;
+	for (auto& minion : GetOurMinions()) {
+		if (IsAtTop(minion)) {
+			vec.push_back(minion);
+		}
+	}
+	return vec;
+}
+
+
+std::vector<MAP_OBJECT> Hypno::GetDownMinions() const {
+	std::vector<MAP_OBJECT> vec;
+	for (auto& minion : GetOurMinions()) {
+		if (IsAtDown(minion)) {
+			vec.push_back(minion);
+		}
+	}
+	return vec;
+}
+
+std::vector<MAP_OBJECT> Hypno::GetMidMinions() const {
+	std::vector<MAP_OBJECT> vec;
+	for (auto& minion : GetOurMinions()) {
+		if (IsAtMid(minion)) {
+			vec.push_back(minion);
+		}
+	}
+	return vec;
 }
