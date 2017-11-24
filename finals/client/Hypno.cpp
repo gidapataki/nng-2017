@@ -121,11 +121,11 @@ void Hypno::AttackTop(const MAP_OBJECT& hero) {
 	if (IsNearOurBase(hero)) {
 		AttackMove(hero.id, {4, MaxY() - 4});
 	} else {
-		auto fallbacks = OrderByDst(GetTopFallbackObjects());
-		if (fallbacks.size() < 2) {
+		auto minions = OrderByDst(GetTopMinions());
+		if (minions.size() < 2) {
 			AttackMove(hero.id, {1, 11});
 		} else {
-			AttackMove(hero.id, fallbacks[0].pos);
+			AttackMove(hero.id, minions[0].pos);
 		}
 
 #if 0
@@ -144,11 +144,11 @@ void Hypno::AttackDown(const MAP_OBJECT& hero) {
 	if (IsNearOurBase(hero)) {
 		AttackMove(hero.id, {MaxX() - 4, 4});
 	} else {
-		auto fallbacks = OrderByDst(GetDownFallbackObjects());
-		if (fallbacks.size() < 2) {
+		auto minions = OrderByDst(GetDownMinions());
+		if (minions.size() < 2) {
 			AttackMove(hero.id, {11, 1});
 		} else {
-			AttackMove(hero.id, fallbacks[0].pos);
+			AttackMove(hero.id, minions[0].pos);
 		}
 #if 0
 		auto turrets = GetRightEnemyTurrets();
@@ -167,11 +167,11 @@ void Hypno::AttackMid(const MAP_OBJECT& hero) {
 	if (turrets.empty()) {
 		AttackMove(hero.id, {MaxX() - 1, MaxY() - 1});
 	} else {
-		auto fallbacks = OrderByDst(GetMidFallbackObjects());
-		if (fallbacks.size() < 2) {
+		auto minions = OrderByDst(GetMidMinions());
+		if (minions.size() < 2) {
 			AttackMove(hero.id, {9, 9});
 		} else {
-			AttackMove(hero.id, fallbacks[0].pos);
+			AttackMove(hero.id, minions[0].pos);
 		}
 #if 0
 		auto target = turrets[0].pos;
@@ -643,49 +643,9 @@ std::vector<MAP_OBJECT> Hypno::GetDownEnemyTurrets() const {
 
 std::vector<MAP_OBJECT> Hypno::GetMidEnemyTurrets() const {
 	return OrderByX(GetObjects([&](const MAP_OBJECT& unit) {
-		auto lane = std::abs(GetLane(unit.pos));
+		auto lane = std::abs(GetLane(unit));
 		return unit.t == TURRET && unit.side == 1 && lane < 4;
 	}));
-}
-
-std::vector<MAP_OBJECT> Hypno::GetTopOurTurrets() const {
-	return OrderByX(GetObjects([&](const MAP_OBJECT& unit) {
-		return unit.t == TURRET && unit.side == 0 && IsTopLane(unit.pos);
-	}));
-}
-
-std::vector<MAP_OBJECT> Hypno::GetDownOurTurrets() const {
-	return OrderByY(GetObjects([&](const MAP_OBJECT& unit) {
-		return unit.t == TURRET && unit.side == 0 && IsRightLane(unit.pos);
-	}));
-}
-
-std::vector<MAP_OBJECT> Hypno::GetMidOurTurrets() const {
-	return OrderByX(GetObjects([&](const MAP_OBJECT& unit) {
-		auto lane = std::abs(GetLane(unit.pos));
-		return unit.t == TURRET && unit.side == 0 && lane < 4;
-	}));
-}
-
-std::vector<MAP_OBJECT> Hypno::GetTopFallbackObjects() const {
-	auto minions = GetTopMinions();
-	auto turrets = GetTopOurTurrets();
-	minions.insert(minions.end(), turrets.begin(), turrets.end());
-	return minions;
-}
-
-std::vector<MAP_OBJECT> Hypno::GetDownFallbackObjects() const {
-	auto minions = GetDownMinions();
-	auto turrets = GetDownOurTurrets();
-	minions.insert(minions.end(), turrets.begin(), turrets.end());
-	return minions;
-}
-
-std::vector<MAP_OBJECT> Hypno::GetMidFallbackObjects() const {
-	auto minions = GetMidMinions();
-	auto turrets = GetMidOurTurrets();
-	minions.insert(minions.end(), turrets.begin(), turrets.end());
-	return minions;
 }
 
 std::vector<MAP_OBJECT> Hypno::OrderByX(
@@ -747,95 +707,8 @@ int Hypno::MaxY() const {
 	return mParser.h - 1;
 }
 
-int Hypno::GetLane(const Position& pos) const {
-	return pos.y - pos.x;
-}
-
-int Hypno::GetAdvance(const Position& pos) const {
-	return pos.x + pos.y;
-}
-
-int Hypno::PreferLane(const MAP_OBJECT& hero) const {
-	const int advance_max = MaxX() + MaxY();
-	const int lane_sep = 6;
-
-	const int advance_low = 30;
-	const int advance_high = advance_max - advance_low;
-
-	const int mod_high = -2;
-	const int mod_mid_high = -6;
-
-	const int mod_low = 4;
-	const int mod_mid_low = 3;
-
-	const int mod_enemy_low = 6;
-	const int mod_enemy_high = 3;
-	const int mod_enemy_mid_low = 4;
-	const int mod_enemy_mid_high = 2;
-
-	int top = 0;
-	int mid = 2;
-	int down = 0;
-
-	for (auto& unit : GetOurHeroes()) {
-		if (unit.id == hero.id) {
-			continue;
-		}
-
-		auto lane = GetLane(unit.pos);
-		auto advance = GetAdvance(unit.pos);
-
-		if (lane > lane_sep) {
-			if (advance > advance_high) {
-				top += mod_high;
-			} else if (advance > advance_low) {
-				top += mod_low;
-			}
-		} else if (lane < -lane_sep) {
-			if (advance > advance_high) {
-				down += mod_high;
-			} else if (advance > advance_low) {
-				down += mod_low;
-			}
-		} else {
-			if (advance > advance_high) {
-				mid += mod_mid_high;
-			} else if (advance > advance_low) {
-				mid += mod_mid_low;
-			}
-		}
-	}
-
-	for (auto& unit : GetEnemyHeroes()) {
-		auto lane = GetLane(unit.pos);
-		auto advance = GetAdvance(unit.pos);
-
-		if (lane > lane_sep) {
-			if (advance < advance_low) {
-				top += mod_enemy_low;
-			} else if (advance < advance_high) {
-				top += mod_enemy_high;
-			}
-		} else if (lane < -lane_sep) {
-			if (advance < advance_low) {
-				down += mod_enemy_low;
-			} else if (advance < advance_high) {
-				down += mod_enemy_high;
-			}
-		} else {
-			if (advance < advance_low) {
-				mid += mod_enemy_mid_low;
-			} else if (advance < advance_high) {
-				mid += mod_enemy_mid_high;
-			}
-		}
-	}
-
-	if (mid >= top && mid >= down) {
-		return 0;
-	} else {
-		return top > down ? 1 : -1;
-	}
+int Hypno::GetLane(const MAP_OBJECT& unit) const {
+	return unit.pos.y - unit.pos.x;
 }
 
 bool Hypno::IsNearOurBase(const MAP_OBJECT& unit, int dst) const {
@@ -846,14 +719,16 @@ bool Hypno::IsAtTop(const MAP_OBJECT& unit) const {
 	auto pos = unit.pos;
 	return
 		(pos.y > 12 && pos.x < 8) ||
-		(pos.y > MaxY() - 8 && pos.x < MaxX() - 12);
+		(pos.y > MaxY() - 8 && pos.x < MaxX() - 12) ||
+		((pos.y > MaxY() - 8 && pos.x >= MaxX() - 12) && GetLane(unit) > 5);
 }
 
 bool Hypno::IsAtDown(const MAP_OBJECT& unit) const {
 	auto pos = unit.pos;
 	return
 		(pos.x > 12 && pos.y < 8) ||
-		(pos.x > MaxX() - 8 && pos.y < MaxY() - 12);
+		(pos.x > MaxX() - 8 && pos.y < MaxY() - 12) ||
+		(pos.x > MaxX() - 8 && pos.y >= MaxY() - 12 && GetLane(unit) < -5);
 }
 
 bool Hypno::IsAtMid(const MAP_OBJECT& unit) const {

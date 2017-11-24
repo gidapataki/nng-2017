@@ -101,9 +101,7 @@ protected:
 	int MaxX() const;
 	int MaxY() const;
 
-	int GetLane(const Position& pos) const;
-	int GetAdvance(const Position& pos) const;
-	int PreferLane(const MAP_OBJECT& hero) const;
+	int GetLane(const MAP_OBJECT& pos) const;
 	bool IsNearOurBase(const MAP_OBJECT& unit, int dst=13) const;
 
 	bool IsAtTop(const MAP_OBJECT& unit) const;
