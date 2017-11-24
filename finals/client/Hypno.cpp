@@ -12,6 +12,11 @@ Hypno::Hypno() {
 }
 
 void Hypno::AttackMove(int hero_id, const Position& pos) {
+	auto possible_targets = GetEnemyObjectsNear(pos, hero_id);
+	if (!possible_targets.empty()) {
+		// TODO sort somehow
+		Attack(hero_id, possible_targets.front().id);
+	}
 	Move(hero_id, pos);
 }
 
