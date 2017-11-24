@@ -213,9 +213,9 @@ Matrix<T>& Matrix<T>::operator+=(const Matrix& o) {
 
 template<typename T>
 std::ostream& operator<<(std::ostream& out, const Matrix<T>& mat) {
-	for (int row = mat.height(); row >= 0; --row) {
+	for (int row = mat.height() - 1; row >= 0; --row) {
 		for (int col = 0; col < mat.width(); ++col) {
-			out << std::setw(4) << mat(row, col) << ' ';
+			out << std::setw(5) << mat(row, col) << ' ';
 		}
 		out << std::endl;
 	}
