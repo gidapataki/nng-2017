@@ -95,17 +95,21 @@ void Hypno::Process() {
 		if (IsNearOurBase(hero, 12)) {
 			auto fwd = "MID";
 			if (!HasTopHero() && (hero.id % 2 == 1)) {
-				auto fwd = "TOP";
+				fwd = "TOP";
 				AttackTop(hero);
 			} else if (!HasDownHero() && (hero.id % 2 == 0)) {
-				auto fwd = "DOWN";
+				fwd = "DOWN";
 				AttackDown(hero);
 			} else {
 				AttackMid(hero);
 			}
+			#if 0
 			std::cerr << "NEAR " << fwd << " " << hero.id << " " << hero.pos << std::endl;
+			#endif
 		} else {
+			#if 0
 			std::cerr << "FAR " << hero.id << " " << hero.pos << std::endl;
+			#endif
 			if (IsAtTop(hero)) {
 				AttackTop(hero);
 			} else if (IsAtDown(hero)) {
