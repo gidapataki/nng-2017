@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include <sstream>
 #include <unistd.h>
+#include <cstring>
 
 #define SERVER_PORT 4242
 

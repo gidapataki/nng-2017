@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "parser.h"
 #include <algorithm>
+#include <cstring>
 
 PARSER::PARSER()
 {

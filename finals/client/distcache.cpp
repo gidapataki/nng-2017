@@ -2,6 +2,8 @@
 #include "parser.h"
 #include "distcache.h"
 
+#include <cstring>
+
 
 
 bool DISTCACHE::LoadFromFile(const char * filename)
