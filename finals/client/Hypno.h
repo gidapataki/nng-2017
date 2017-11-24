@@ -77,6 +77,7 @@ protected:
 
 	int MaxX() const;
 	int MaxY() const;
+
 	int GetLane(const Position& pos) const;
 	int GetAdvance(const Position& pos) const;
 	int PreferLane(const MAP_OBJECT& hero) const;

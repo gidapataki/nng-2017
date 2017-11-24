@@ -608,5 +608,5 @@ int Hypno::PreferLane(const MAP_OBJECT& hero) const {
 }
 
 bool Hypno::IsNearOurBase(const MAP_OBJECT& unit, int dst) const {
-	return unit.pos.x < dst || unit.pos.y < dst;
+	return unit.pos.x < dst && unit.pos.y < dst;
 }
