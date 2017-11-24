@@ -116,11 +116,11 @@ void Hypno::AttackTop(const MAP_OBJECT& hero) {
 	if (IsNearOurBase(hero)) {
 		AttackMove(hero.id, {4, MaxY() - 4});
 	} else {
-		auto minions = OrderByDst(GetTopMinions(), true);
+		auto minions = OrderByDst(GetTopMinions());
 		if (minions.size() < 2) {
 			AttackMove(hero.id, {1, 11});
 		} else {
-			AttackMove(hero.id, minions[1].pos);
+			AttackMove(hero.id, minions[0].pos);
 		}
 
 #if 0
@@ -139,11 +139,11 @@ void Hypno::AttackDown(const MAP_OBJECT& hero) {
 	if (IsNearOurBase(hero)) {
 		AttackMove(hero.id, {MaxX() - 4, 4});
 	} else {
-		auto minions = OrderByDst(GetDownMinions(), true);
+		auto minions = OrderByDst(GetDownMinions());
 		if (minions.size() < 2) {
 			AttackMove(hero.id, {11, 1});
 		} else {
-			AttackMove(hero.id, minions[1].pos);
+			AttackMove(hero.id, minions[0].pos);
 		}
 #if 0
 		auto turrets = GetRightEnemyTurrets();
@@ -162,11 +162,11 @@ void Hypno::AttackMid(const MAP_OBJECT& hero) {
 	if (turrets.empty()) {
 		AttackMove(hero.id, {MaxX() - 1, MaxY() - 1});
 	} else {
-		auto minions = OrderByDst(GetMidMinions(), true);
+		auto minions = OrderByDst(GetMidMinions());
 		if (minions.size() < 2) {
 			AttackMove(hero.id, {9, 9});
 		} else {
-			AttackMove(hero.id, minions[1].pos);
+			AttackMove(hero.id, minions[0].pos);
 		}
 #if 0
 		auto target = turrets[0].pos;
