@@ -21,6 +21,12 @@ Position Hypno::FightOrFlight(int hero_id) const {
 	if (dmg_map[hero->pos] <= 0) {
 		return hero->pos;
 	}
+	auto dmg_deficit = dmg_map[hero->pos];
+	auto hp_surplus = -hp_map[hero->pos];
+	if (hp_surplus > 2*dmg_deficit) {
+		// If we can last two turns in this position, stay and fight
+		return hero->pos;
+	}
 	auto neighbours = GetNeighbours(hero->pos);
 	auto target_pos = *std::min_element(begin(neighbours), end(neighbours),
 		[&](auto lhs, auto rhs) {
