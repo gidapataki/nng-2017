@@ -33,6 +33,7 @@ Position Hypno::FightOrFlight(int hero_id) const {
 			return dmg_map[lhs] < dmg_map[rhs];
 		}
 	);
+	return target_pos;
 }
 
 void Hypno::AttackMove(int hero_id, const Position& pos) {
