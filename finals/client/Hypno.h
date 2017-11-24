@@ -25,6 +25,7 @@ protected:
 	void AttackDown(const MAP_OBJECT& hero);
 	void AttackMid(const MAP_OBJECT& hero);
 
+	Matrix<double> GetDamageMap(const std::vector<MAP_OBJECT>& units) const;
 	Matrix<double> GetDamageMap() const;
 	Matrix<double> GetHPMap() const;
 	Matrix<double> GetHeatMap() const;

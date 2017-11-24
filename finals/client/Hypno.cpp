@@ -290,6 +290,10 @@ std::vector<MAP_OBJECT> Hypno::GetObjects(std::function<bool(const MAP_OBJECT&)>
 }
 
 Matrix<double> Hypno::GetDamageMap() const {
+	return GetDamageMap(mParser.Units);
+}
+
+Matrix<double> Hypno::GetDamageMap(const std::vector<MAP_OBJECT>& units) const {
 	Matrix<double> result{
 		static_cast<Matrix<double>::size_type>(mParser.w),
 		static_cast<Matrix<double>::size_type>(mParser.h),
@@ -297,7 +301,7 @@ Matrix<double> Hypno::GetDamageMap() const {
 	};
 
 
-	for (auto& unit : mParser.Units) {
+	for (auto& unit : units) {
 		// skip bases for now
 		if (unit.t == UNIT_TYPE::BASE) {
 			continue;
