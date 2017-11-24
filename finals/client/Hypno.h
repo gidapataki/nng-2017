@@ -6,6 +6,7 @@
 #include <map>
 #include <string>
 #include <functional>
+#include <unordered_map>
 
 
 class Hypno : public CLIENT
@@ -114,6 +115,8 @@ protected:
 	bool IsEnemyInside() const;
 
 	bool IsGangOfFourHigh(const MAP_OBJECT& unit) const;
+
+	std::unordered_map<int, int> enemy_hp_map;
 
 	std::string mPreferredOpponents;
 	std::map<int, int> mSuccesfulEnemyHeroes;
