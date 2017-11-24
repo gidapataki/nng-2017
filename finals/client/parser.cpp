@@ -63,16 +63,27 @@ int PARSER::GetEnemyHeroDamage() const {
 	return GetHeroDamage(1);
 }
 
-int PARSER::GetHeroHP(int side) const {
+int PARSER::GetHeroMaxHP(int side) const {
 	return HERO_MAX_HP_BASE + level[side] * HERO_MAX_HP_PER_LEVEL;
 }
 
-int PARSER::GetOurHeroHP() const {
-	return GetHeroHP(0);
+int PARSER::GetOurHeroMaxHP() const {
+	return GetHeroMaxHP(0);
 }
 
-int PARSER::GetEnemyHeroHP() const {
-	return GetHeroHP(1);
+int PARSER::GetEnemyHeroMaxHP() const {
+	return GetHeroMaxHP(1);
+}
+
+int PARSER::GetMaxHPOfunit(const MAP_OBJECT& unit) const {
+	switch (unit.t) {
+		case UNIT_TYPE::HERO: return GetHeroMaxHP(unit.side);
+		case UNIT_TYPE::MINION: return MINION_MAX_HP;
+		case UNIT_TYPE::TURRET: return TURRET_MAX_HP;
+		case UNIT_TYPE::BASE: return BASE_MAX_HP;
+	}
+	std::cerr << "Unknown unit type " << unit.t << std::endl;
+	return 1;
 }
 
 void PARSER::Parse(const std::vector<std::string> &ServerResponse)

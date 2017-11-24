@@ -100,7 +100,9 @@ public:
 	int GetOurHeroDamage() const;
 	int GetEnemyHeroDamage() const;
 
-	int GetHeroHP(int side) const;
-	int GetOurHeroHP() const;
-	int GetEnemyHeroHP() const;
+	int GetHeroMaxHP(int side) const;
+	int GetOurHeroMaxHP() const;
+	int GetEnemyHeroMaxHP() const;
+
+	int GetMaxHPOfunit(const MAP_OBJECT& unit) const;
 };
