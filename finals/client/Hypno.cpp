@@ -1,5 +1,7 @@
 #include "Hypno.h"
 #include <set>
+#include <map>
+#include <vector>
 #include <iostream>
 #include <algorithm>
 
@@ -224,38 +226,41 @@ Matrix<int> Hypno::GetUnitHeatMap() const {
 	static constexpr int hero = 10; // TODO: Make this depend on level/hp
 	static constexpr int effectWidth = 5;
 
-	std::vector<Position> sources;
+	std::map<Position, int> sources;
 	for (const auto& ourHero: GetOurHeroes()) {
 		result[ourHero.pos] -= friendly * hero;
-		sources.push_back(ourHero.pos);
+		sources[ourHero.pos] = result[ourHero.pos];
 	}
 
 	for (const auto& enemyHero: GetEnemyHeroes()) {
 		result[enemyHero.pos] += enemy * hero;
-		sources.push_back(enemyHero.pos);
+		sources[enemyHero.pos] = result[enemyHero.pos];
 	}
 
 	for (const auto& ourMinion: GetOurMinions()) {
 		result[ourMinion.pos] -= friendly * minion;
-		sources.push_back(ourMinion.pos);
+		sources[ourMinion.pos] = result[ourMinion.pos];
 	}
 
 	for (const auto& enemyMinion: GetEnemyMinions()) {
 		result[enemyMinion.pos] += enemy * minion;
-		sources.push_back(enemyMinion.pos);
+		sources[enemyMinion.pos] = result[enemyMinion.pos];
 	}
 
 	for (const auto& source: sources) {
-		for (int x = source.x-effectWidth; x < source.x+effectWidth + 1; ++x) {
-			for (int y = source.y-effectWidth; y < source.y+effectWidth + 1; ++y) {
+		const auto& sourceX = source.first.x;
+		const auto& sourceY = source.first.y;
+		for (int x = sourceX-effectWidth; x < sourceX+effectWidth + 1; ++x) {
+			for (int y = sourceY-effectWidth; y < sourceY+effectWidth + 1; ++y)
+			{
 				if (x < 0 || x > MaxX() || y < 0 || y > MaxY()) {
 					continue;
 				}
 				auto currentPosition = Position{x, y};
 				auto distance = std::abs(
-						mDistCache.GetDist(currentPosition, source));
+						mDistCache.GetDist(currentPosition, source.first));
 				result[currentPosition] +=
-						((effectWidth - distance)/distance) * result[source];
+						((effectWidth - distance)/distance) * result[source.first];
 			}
 		}
 	}
