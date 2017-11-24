@@ -239,10 +239,12 @@ void Hypno::Process() {
 		enemy_hp_map[enemy.id] = enemy.hp;
 	}
 	UpdateEnemyHeroes();
+#if 0
 	for (const auto& enemyHero: GetMostEvilEnemyHeroes()) {
 		std::cerr << "Hero " << enemyHero.first << " has been near: "
 			<< enemyHero.second << " of our Minion's kills" << std::endl;
 	}
+#endif
 	for (auto& hero : GetControlledHeroes()) {
 		if (IsNearOurBase(hero)) {
 			if (IsEnemyInside()) {
