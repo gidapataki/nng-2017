@@ -77,6 +77,25 @@ void Hypno::AttackMove(int hero_id, const Position& pos) {
 	}
 }
 
+void Hypno::AttackInside(const MAP_OBJECT& hero) {
+	std::vector<MAP_OBJECT> enemies;
+	for (auto& unit : GetEnemyHeroes()) {
+		if (IsNearOurBase(unit)) {
+			enemies.push_back(unit);
+		}
+	}
+
+	std::sort(enemies.begin(), enemies.end(),
+		[](const MAP_OBJECT& lhs, const MAP_OBJECT& rhs) {
+			return lhs.hp < rhs.hp;
+		});
+	if (enemies.empty()) {
+		AttackMid(hero);
+	} else {
+		AttackMove(hero.id, enemies.front().pos);
+	}
+}
+
 void Hypno::AttackTop(const MAP_OBJECT& hero) {
 	if (IsNearOurBase(hero)) {
 		AttackMove(hero.id, {4, MaxY() - 4});
@@ -117,8 +136,11 @@ void Hypno::AttackMid(const MAP_OBJECT& hero) {
 
 void Hypno::Process() {
 	for (auto& hero : GetOurHeroes()) {
-		if (IsNearOurBase(hero, 12)) {
+		if (IsNearOurBase(hero)) {
 			auto fwd = "MID";
+			if (IsEnemyInside()) {
+				AttackInside(hero);
+			}
 			if (!HasTopHero() && (hero.id % 2 == 1)) {
 				fwd = "TOP";
 				AttackTop(hero);
@@ -675,6 +697,15 @@ bool Hypno::HasTopHero() const {
 bool Hypno::HasDownHero() const {
 	for (auto& unit : GetOurHeroes()) {
 		if (IsAtDown(unit)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool Hypno::IsEnemyInside() const {
+	for (auto& unit : GetEnemyHeroes()) {
+		if (IsNearOurBase(unit)) {
 			return true;
 		}
 	}

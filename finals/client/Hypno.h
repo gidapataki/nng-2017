@@ -24,6 +24,7 @@ protected:
 	void AttackTop(const MAP_OBJECT& hero);
 	void AttackDown(const MAP_OBJECT& hero);
 	void AttackMid(const MAP_OBJECT& hero);
+	void AttackInside(const MAP_OBJECT& hero);
 
 	Matrix<double> GetDamageMap(const std::vector<MAP_OBJECT>& units) const;
 	Matrix<double> GetDamageMap() const;
@@ -87,6 +88,7 @@ protected:
 	bool IsAtDown(const MAP_OBJECT& unit) const;
 	bool HasTopHero() const;
 	bool HasDownHero() const;
+	bool IsEnemyInside() const;
 
 	std::string mPreferredOpponents;
 };
