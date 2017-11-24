@@ -34,6 +34,10 @@ protected:
 	std::vector<MAP_OBJECT> GetObjectsNear(
 		const Position& pos, int distance_sq) const;
 
+	bool CanOneHit(const MAP_OBJECT& unit) const;
+
+	int GetPreferredEnemyToAttack(const std::vector<MAP_OBJECT>& enemies) const;
+
 	bool IsTopLane(const Position& pos) const;
 	bool IsLeftLane(const Position& pos) const;
 	bool IsBottomLane(const Position& pos) const;

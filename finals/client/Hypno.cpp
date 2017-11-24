@@ -18,7 +18,7 @@ void Hypno::AttackMove(int hero_id, const Position& pos) {
 	auto possible_targets = GetEnemyObjectsNear(hero->pos, HERO_RANGE_SQ);
 	if (!possible_targets.empty()) {
 		// TODO sort somehow
-		Attack(hero_id, possible_targets.front().id);
+		Attack(hero_id, GetPreferredEnemyToAttack(possible_targets));
 	} else {
 		Move(hero_id, mDistCache.GetNextTowards(hero->pos, pos));
 	}
@@ -91,6 +91,35 @@ std::vector<MAP_OBJECT> Hypno::GetObjectsNear(
 	return GetObjects([&](const MAP_OBJECT& obj) {
 		return pos.DistSquare(obj.pos) <= distance_sq;
 	});
+}
+
+bool Hypno::CanOneHit(const MAP_OBJECT& unit) const {
+	return unit.hp <= mParser.GetHeroDamage(!unit.side);
+}
+
+int Hypno::GetPreferredEnemyToAttack(const std::vector<MAP_OBJECT>& enemies) const {
+	// one hit a turret if we can
+	for (auto& enemy : enemies) {
+		if (enemy.t == UNIT_TYPE::TURRET && CanOneHit(enemy)) {
+			return enemy.id;
+		}
+	}
+
+	// one hit an enemy if we can
+	for (auto& enemy : enemies) {
+		if (enemy.t == UNIT_TYPE::HERO && CanOneHit(enemy)) {
+			return enemy.id;
+		}
+	}
+
+	// one hit a minion if we can
+	for (auto& enemy : enemies) {
+		if (enemy.t == UNIT_TYPE::MINION && CanOneHit(enemy)) {
+			return enemy.id;
+		}
+	}
+
+	return enemies.front().id;
 }
 
 std::vector<MAP_OBJECT> Hypno::GetObjects(std::function<bool(const MAP_OBJECT&)> fn) const {
