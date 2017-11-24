@@ -208,3 +208,14 @@ Matrix<T>& Matrix<T>::operator+=(const Matrix& o) {
 	}
 	return *this;
 }
+
+template<typename T>
+std::ostream& operator<<(std::ostream& out, const Matrix<T>& mat) {
+	for (int row = mat.height(); row >= 0; --row) {
+		for (int col = 0; col < mat.width(); ++col) {
+			out << mat(row, col);
+		}
+		out << std::endl;
+	}
+	return out;
+}
