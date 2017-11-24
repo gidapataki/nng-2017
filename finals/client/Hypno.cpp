@@ -58,3 +58,13 @@ std::vector<MAP_OBJECT> Hypno::GetEnemyTurrets() {
 	}
 	return vec;
 }
+
+Matrix<int> Hypno::GetHeatMap() const {
+	Matrix<int> result{
+			static_cast<Matrix<int>::size_type>(mParser.w),
+			static_cast<Matrix<int>::size_type>(mParser.h),
+			0
+	};
+
+	return result;
+}

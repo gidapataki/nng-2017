@@ -1,6 +1,7 @@
 #pragma once
 #include "Client.h"
 #include "parser.h"
+#include "Matrix.h"
 #include <vector>
 #include <string>
 
@@ -23,4 +24,5 @@ protected:
 	std::vector<MAP_OBJECT> GetOurTurrets();
 	std::vector<MAP_OBJECT> GetEnemyTurrets();
 	std::vector<int> GetOurHeroes();
+	Matrix<int> GetHeatMap() const;
 };
