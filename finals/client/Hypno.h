@@ -68,7 +68,7 @@ protected:
 
 	bool IsTopLane(const Position& pos) const;
 	bool IsLeftLane(const Position& pos) const;
-	bool IsBottomLane(const Position& pos) const;
+	bool IsDownLane(const Position& pos) const;
 	bool IsRightLane(const Position& pos) const;
 
 	std::vector<MAP_OBJECT> GetTopEnemyTurrets() const;

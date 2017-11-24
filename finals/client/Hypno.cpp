@@ -644,7 +644,7 @@ bool Hypno::IsTopLane(const Position& pos) const {
 	return pos.y > MaxY() - 4;
 }
 
-bool Hypno::IsBottomLane(const Position& pos) const {
+bool Hypno::IsDownLane(const Position& pos) const {
 	return pos.y < 4;
 }
 
@@ -677,13 +677,13 @@ std::vector<MAP_OBJECT> Hypno::GetMidEnemyTurrets() const {
 
 std::vector<MAP_OBJECT> Hypno::GetTopOurTurrets() const {
 	return OrderByX(GetObjects([&](const MAP_OBJECT& unit) {
-		return unit.t == TURRET && unit.side == 0 && IsTopLane(unit.pos);
+		return unit.t == TURRET && unit.side == 0 && IsLeftLane(unit.pos);
 	}));
 }
 
 std::vector<MAP_OBJECT> Hypno::GetDownOurTurrets() const {
 	return OrderByY(GetObjects([&](const MAP_OBJECT& unit) {
-		return unit.t == TURRET && unit.side == 0 && IsRightLane(unit.pos);
+		return unit.t == TURRET && unit.side == 0 && IsDownLane(unit.pos);
 	}));
 }
 
