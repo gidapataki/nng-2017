@@ -87,7 +87,7 @@ void Hypno::AttackMove(int hero_id, const Position& pos) {
 		auto possible_targets = GetEnemyObjectsNear(hero->pos, HERO_RANGE_SQ);
 		if (!possible_targets.empty()) {
 			Attack(hero_id, GetPreferredEnemyToAttack(possible_targets));
-		} else {
+		} else if (hero->pos != pos) {
 			Move(hero_id, mDistCache.GetNextTowards(hero->pos, pos));
 		}
 	}
