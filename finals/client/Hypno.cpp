@@ -15,28 +15,26 @@ Hypno::Hypno() {
 }
 
 void Hypno::AttackMove(int hero_id, const Position& pos) {
-	std::cerr << ". " << pos << std::endl;
-
+	auto dmg_map = GetDamageMap();
+	auto hp_map = GetHPMap();
 	auto hero = mParser.GetUnitByID(hero_id);
-	auto possible_targets = GetEnemyObjectsNear(hero->pos, HERO_RANGE_SQ);
-	if (!possible_targets.empty()) {
-		auto dmg_map = GetDamageMap();
-		auto hp_map = GetHPMap();
 
-		// try to backtrack
-		if (dmg_map[hero->pos] > 0) {
-			auto neighbours = GetNeighbours(hero->pos);
-			auto target_pos = *std::min_element(begin(neighbours), end(neighbours),
-				[&](auto lhs, auto rhs) {
-					return dmg_map[lhs] < dmg_map[rhs];
-				}
-			);
-			Move(hero_id, target_pos);
-		} else {
-			Attack(hero_id, GetPreferredEnemyToAttack(possible_targets));
-		}
+	// try to backtrack
+	if (dmg_map[hero->pos] > 0) {
+		auto neighbours = GetNeighbours(hero->pos);
+		auto target_pos = *std::min_element(begin(neighbours), end(neighbours),
+			[&](auto lhs, auto rhs) {
+				return dmg_map[lhs] < dmg_map[rhs];
+			}
+		);
+		Move(hero_id, target_pos);
 	} else {
-		Move(hero_id, mDistCache.GetNextTowards(hero->pos, pos));
+		auto possible_targets = GetEnemyObjectsNear(hero->pos, HERO_RANGE_SQ);
+		if (!possible_targets.empty()) {
+			Attack(hero_id, GetPreferredEnemyToAttack(possible_targets));
+		} else {
+			Move(hero_id, mDistCache.GetNextTowards(hero->pos, pos));
+		}
 	}
 }
 
