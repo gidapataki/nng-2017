@@ -2,6 +2,11 @@
 #include <set>
 
 
+CLIENT* CreateClient()
+{
+	return new Hypno();
+}
+
 Hypno::Hypno() {
 	// nothing to see here
 }
@@ -21,11 +26,6 @@ std::vector<MAP_OBJECT> Hypno::GetEnemyObjects() const {
 }
 
 void Hypno::Process() {
-}
-
-CLIENT* CreateClient()
-{
-	return new Hypno();
 }
 
 std::vector<MAP_OBJECT> Hypno::GetObjects(std::function<bool(const MAP_OBJECT&)> fn) {
