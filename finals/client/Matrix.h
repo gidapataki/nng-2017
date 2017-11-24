@@ -1,5 +1,7 @@
 #pragma once
 #include "Position.h"
+#include <ostream>
+#include <iomanip>
 #include <algorithm>
 #include <stdexcept>
 #include <boost/assert.hpp>
@@ -213,7 +215,7 @@ template<typename T>
 std::ostream& operator<<(std::ostream& out, const Matrix<T>& mat) {
 	for (int row = mat.height(); row >= 0; --row) {
 		for (int col = 0; col < mat.width(); ++col) {
-			out << mat(row, col);
+			out << std::setw(4) << mat(row, col) << ' ';
 		}
 		out << std::endl;
 	}
