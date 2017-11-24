@@ -35,6 +35,7 @@ protected:
 
 	std::vector<MAP_OBJECT> GetOurTurrets() const;
 	std::vector<MAP_OBJECT> GetEnemyTurrets() const;
+	std::vector<MAP_OBJECT> GetControlledHeroes() const;
 	std::vector<MAP_OBJECT> GetHeroes(int side) const;
 	std::vector<MAP_OBJECT> GetOurHeroes() const;
 	std::vector<MAP_OBJECT> GetEnemyHeroes() const;

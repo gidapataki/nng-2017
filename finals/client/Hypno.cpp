@@ -176,7 +176,7 @@ void Hypno::AttackMid(const MAP_OBJECT& hero) {
 }
 
 void Hypno::Process() {
-	for (auto& hero : GetOurHeroes()) {
+	for (auto& hero : GetControlledHeroes()) {
 		if (IsNearOurBase(hero)) {
 			auto fwd = "MID";
 			if (IsEnemyInside()) {
@@ -209,18 +209,24 @@ void Hypno::Process() {
 	}
 }
 
-std::vector<MAP_OBJECT> Hypno::GetHeroes(int side) const {
+std::vector<MAP_OBJECT> Hypno::GetControlledHeroes() const {
 	std::vector<MAP_OBJECT> vec;
 	std::set<int> ids;
 
 	for (auto& cc : mParser.Controllers) {
-		if (cc.controller_id == side) {
+		if (cc.controller_id == 0) {
 			ids.insert(cc.hero_id);
 		}
 	}
 
 	return GetObjects([&](const MAP_OBJECT& unit) {
 		return (unit.t == HERO && ids.count(unit.id) > 0);
+	});
+}
+
+std::vector<MAP_OBJECT> Hypno::GetHeroes(int side) const {
+	return GetObjects([&](const MAP_OBJECT& unit) {
+		return (unit.t == UNIT_TYPE::HERO && unit.side == side);
 	});
 }
 
