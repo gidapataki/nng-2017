@@ -56,13 +56,16 @@ Position Hypno::FightOrFlight(int hero_id) const {
 			++minions_in_range;
 		}
 	}
+	auto hp_map = GetHPMap();
 	if (minions_in_range != minions_attacked) {
 		// std::cerr << hero->pos << ": minions "
 		// 	<< minions_attacked << "/" << minions_in_range << std::endl;
-		return Retreat(dmg_map, *hero);
+		if (!(hp_map[hero->pos] <= 5*MINION_MAX_HP)) {
+			return Retreat(dmg_map, *hero);
+		}
+		std::cerr << "Would retreat, but outnumber" << std::endl;
 	}
 
-	auto hp_map = GetHPMap();
 	if (dmg_map[hero->pos] <= 0) {
 		return hero->pos;
 	}
