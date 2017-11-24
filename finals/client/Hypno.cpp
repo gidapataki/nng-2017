@@ -104,3 +104,19 @@ Matrix<int> Hypno::GetHeatMap() const {
 
 	return result;
 }
+
+bool Hypno::IsTopLane(const Position& pos) {
+	return pos.y > mParser.h - 4;
+}
+
+bool Hypno::IsBottomLane(const Position& pos) {
+	return pos.y < 4;
+}
+
+bool Hypno::IsLeftLane(const Position& pos) {
+	return pos.x < 4;
+}
+
+bool Hypno::IsLeftLane(const Position& pos) {
+	return pos.x > mParser.w - 4;
+}

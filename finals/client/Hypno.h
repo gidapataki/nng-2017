@@ -30,4 +30,9 @@ protected:
 	std::vector<MAP_OBJECT> GetEnemyObjectsNear(
 		const Position& pos, int distance_sq) const;
 	MAP_OBJECT GetEnemyBase() const;
+
+	bool IsTopLane(const Position& pos) const;
+	bool IsLeftLane(const Position& pos) const;
+	bool IsBottomLane(const Position& pos) const;
+	bool IsRightLane(const Position& pos) const;
 };
