@@ -91,7 +91,9 @@ void Hypno::AttackMove(int hero_id, const Position& pos) {
 	} else {
 		auto possible_targets = GetEnemyObjectsNear(hero->pos, HERO_RANGE_SQ);
 		if (!possible_targets.empty()) {
-			Attack(hero_id, GetPreferredEnemyToAttack(possible_targets));
+			auto target_unit = GetPreferredEnemyToAttack(possible_targets);
+			Attack(hero_id, target_unit);
+			enemy_hp_map[target_unit] -= mParser.GetOurHeroDamage();
 		} else if (hero->pos != pos) {
 			Move(hero_id, mDistCache.GetNextTowards(hero->pos, pos));
 		}
@@ -232,6 +234,10 @@ std::map<int, int> Hypno::GetMostEvilEnemyHeroes() const {
 }
 
 void Hypno::Process() {
+	enemy_hp_map.clear();
+	for (auto& enemy : GetEnemyObjects()) {
+		enemy_hp_map[enemy.id] = enemy.hp;
+	}
 	UpdateEnemyHeroes();
 	for (const auto& enemyHero: GetMostEvilEnemyHeroes()) {
 		std::cerr << "Hero " << enemyHero.first << " has been near: "
@@ -403,34 +409,45 @@ bool Hypno::IsNeighbourOfCircle(
 }
 
 bool Hypno::CanOneHit(const MAP_OBJECT& unit) const {
-	return unit.hp <= mParser.GetHeroDamage(!unit.side);
+	return enemy_hp_map.at(unit.id) <= mParser.GetHeroDamage(!unit.side);
 }
 
 int Hypno::GetPreferredEnemyToAttack(const std::vector<MAP_OBJECT>& enemies) const {
 	assert(!enemies.empty());
 	// one hit a turret if we can
 	for (auto& enemy : enemies) {
-		if (enemy.t == UNIT_TYPE::TURRET && CanOneHit(enemy)) {
+		if (enemy.t == UNIT_TYPE::TURRET && CanOneHit(enemy)
+			&& enemy_hp_map.at(enemy.id) > 0)
+		{
 			return enemy.id;
 		}
 	}
 
 	// one hit a hero if we can
 	for (auto& enemy : enemies) {
-		if (enemy.t == UNIT_TYPE::HERO && CanOneHit(enemy)) {
+		if (enemy.t == UNIT_TYPE::HERO && CanOneHit(enemy)
+			&& enemy_hp_map.at(enemy.id) > 0)
+		{
 			return enemy.id;
 		}
 	}
 
 	// one hit a minion if we can
 	for (auto& enemy : enemies) {
-		if (enemy.t == UNIT_TYPE::MINION && CanOneHit(enemy)) {
+		if (enemy.t == UNIT_TYPE::MINION && CanOneHit(enemy)
+			&& enemy_hp_map.at(enemy.id) > 0)
+		{
 			return enemy.id;
 		}
 	}
 
-	// hit the unit with the least hp
-	return std::min_element(begin(enemies), end(enemies), LessByHp)->id;
+	auto target = enemies.front();
+	for (auto& enemy : enemies) {
+		if (enemy_hp_map.at(enemy.id) > 0 && enemy.hp < target.hp) {
+			target = enemy;
+		}
+	}
+	return target.id;
 }
 
 std::vector<MAP_OBJECT> Hypno::GetObjects(std::function<bool(const MAP_OBJECT&)> fn) const {
