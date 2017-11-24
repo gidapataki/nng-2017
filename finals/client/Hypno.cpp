@@ -84,6 +84,14 @@ MAP_OBJECT Hypno::GetEnemyBase() const {
 	return {};
 }
 
+std::vector<MAP_OBJECT> Hypno::GetObjectsNear(
+	const Position& pos, int distance_sq) const
+{
+	return GetObjects([&](const MAP_OBJECT& obj) {
+		return pos.DistSquare(obj.pos) <= distance_sq;
+	});
+}
+
 std::vector<MAP_OBJECT> Hypno::GetObjects(std::function<bool(const MAP_OBJECT&)> fn) const {
 	std::vector<MAP_OBJECT> vec;
 	for (auto& unit : mParser.Units) {
@@ -101,6 +109,28 @@ Matrix<int> Hypno::GetHeatMap() const {
 			static_cast<Matrix<int>::size_type>(mParser.h),
 			0
 	};
+
+	static constexpr int friendly = 10;
+	static constexpr int enemy = 20;
+
+	static constexpr int tower = 40;
+	static constexpr int minion = 5;
+
+	static constexpr int neighbouring = 1;
+
+	for (const auto& enemyTurret: GetEnemyTurrets()) {
+		for (const auto& cell: GetObjectsNear(enemyTurret.pos, TURRET_RANGE_SQ))
+		{
+			result[cell.pos] += enemy * tower;
+		}
+	}
+
+	for (const auto& ourTurret: GetOurTurrets()) {
+		for (const auto& cell: GetObjectsNear(ourTurret.pos, TURRET_RANGE_SQ))
+		{
+			result[cell.pos] -= friendly * tower;
+		}
+	}
 
 	return result;
 }

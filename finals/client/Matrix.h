@@ -1,4 +1,5 @@
 #pragma once
+#include "Position.h"
 #include <algorithm>
 #include <stdexcept>
 
@@ -32,6 +33,9 @@ public:
 
     reference operator()(size_type x, size_type y);
     const_reference operator()(size_type x, size_type y) const;
+
+	reference operator[](const Position& at);
+	const_reference operator[](const Position& at) const;
 
     void set_if_inbounds(size_type x, size_type y, const value_type& val);
 
@@ -135,6 +139,16 @@ typename Matrix<T>::reference Matrix<T>::operator()(size_type x, size_type y) {
 template<class T> inline
 typename Matrix<T>::const_reference Matrix<T>::operator()(size_type x, size_type y) const {
     return data_[y*width_+x];
+}
+
+template<class T> inline
+typename Matrix<T>::reference Matrix<T>::operator[](const Position& at) {
+    return data_[at.y*width_+at.x];
+}
+
+template<class T> inline
+typename Matrix<T>::const_reference Matrix<T>::operator[](const Position& at) const {
+    return data_[at.y*width_+at.x];
 }
 
 template<class T> inline
