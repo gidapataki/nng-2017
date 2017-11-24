@@ -52,6 +52,8 @@ protected:
 		const Position& pos, int distance_sq) const;
 
 	std::vector<Position> GetNeighbours(const Position& pos) const;
+	bool IsNeighbourOfCircle(
+		const Position& pos, const Position& center, int radius_sq) const;
 
 	bool CanOneHit(const MAP_OBJECT& unit) const;
 

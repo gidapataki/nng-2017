@@ -220,6 +220,25 @@ std::vector<Position> Hypno::GetNeighbours(const Position& pos) const {
 	return result;
 }
 
+bool Hypno::IsNeighbourOfCircle(
+	const Position& pos, const Position& center, int radius_sq) const
+{
+	auto d_sq = pos.DistSquare(center);
+	if (d_sq <= radius_sq) {
+		return true;
+	}
+
+	for (int y = pos.y - 1; y <= pos.y + 1; ++y) {
+		for (int x = pos.x - 1; x <= pos.x + 1; ++x) {
+			auto n_d_sq = Position{x, y}.DistSquare(center);
+			if (n_d_sq <= radius_sq) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 bool Hypno::CanOneHit(const MAP_OBJECT& unit) const {
 	return unit.hp <= mParser.GetHeroDamage(!unit.side);
 }
@@ -287,8 +306,7 @@ Matrix<double> Hypno::GetDamageMap() const {
 				if (x < 0 || x >= MaxX() || y < 0 || y >= MaxY()) {
 					continue;
 				}
-				int d_sq = Position{x, y}.DistSquare(unit.pos);
-				if (d_sq > range_sq+2) {
+				if (!IsNeighbourOfCircle(Position{x, y}, unit.pos, range_sq)) {
 					continue;
 				}
 				result.at(x, y) += sign * dmg;
@@ -324,8 +342,7 @@ Matrix<double> Hypno::GetHPMap() const {
 				if (x < 0 || x > MaxX() || y < 0 || y > MaxY()) {
 					continue;
 				}
-				int d_sq = Position{x, y}.DistSquare(unit.pos);
-				if (d_sq > range_sq) {
+				if (!IsNeighbourOfCircle(Position{x, y}, unit.pos, range_sq)) {
 					continue;
 				}
 				result(x, y) += sign * hp;
