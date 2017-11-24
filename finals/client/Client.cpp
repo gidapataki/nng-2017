@@ -357,7 +357,7 @@ void CLIENT::Attack(int hero_id, int target_id)
 	command_buffer << "attack " << hero_id << " " << target_id << "\n";
 }
 
-void CLIENT::Move(int hero_id, POS target_pos)
+void CLIENT::Move(int hero_id, Position target_pos)
 {
 	command_buffer << "move " << hero_id << " " << target_pos.x << " " << target_pos.y << "\n";
 }

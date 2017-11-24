@@ -13,20 +13,20 @@ static const int HERO_RANGE_SQ = 13;
 static const int TURRET_RANGE_SQ = 13;
 static const int MINION_RANGE_SQ = 8;
 
-struct POS
+struct Position
 {
 	int x, y;
-	POS() { x = y = 0; }
-	POS(int _x, int _y) { x = _x; y = _y; }
-	bool operator== (POS const &rhs) const
+	Position() { x = y = 0; }
+	Position(int _x, int _y) { x = _x; y = _y; }
+	bool operator== (Position const &rhs) const
 	{
 		return x == rhs.x && y == rhs.y;
 	}
-	bool operator!= (POS const &rhs) const
+	bool operator!= (Position const &rhs) const
 	{
 		return x != rhs.x || y != rhs.y;
 	}
-	bool operator< (POS const &rhs) const
+	bool operator< (Position const &rhs) const
 	{
 		if (y != rhs.y)
 			return y<rhs.y;
@@ -36,7 +36,7 @@ struct POS
 	{
 		return x != 0;
 	}
-	int DistSquare(POS const &rhs) const
+	int DistSquare(Position const &rhs) const
 	{
 		return (x - rhs.x)*(x - rhs.x) + (y - rhs.y)*(y - rhs.y);
 	}
@@ -51,14 +51,14 @@ enum UNIT_TYPE {
 
 struct MAP_OBJECT {
 	int id, hp, side;
-	POS pos;
+	Position pos;
 	UNIT_TYPE t;
 };
 struct ATTACK_INFO {
 	int attacker_id;
-	POS attacker_pos;
+	Position attacker_pos;
 	int target_id;
-	POS target_pos;
+	Position target_pos;
 };
 struct RESPAWN_INFO
 {
@@ -110,7 +110,7 @@ public:
 	std::vector<ATTACK_INFO> Attacks;
 	std::vector<RESPAWN_INFO> Respawns;
 
-	GROUND_TYPE GetAt(const POS &p) const { return p.x<w && p.y<h ? Arena[p.x + p.y*w] : WALL; }
+	GROUND_TYPE GetAt(const Position &p) const { return p.x<w && p.y<h ? Arena[p.x + p.y*w] : WALL; }
 	MAP_OBJECT *GetUnitByID(int id);
 	PLAYER_INFO *GetPlayerByID(int player_id);
 	enum MATCH_RESULT {

@@ -28,7 +28,7 @@ protected:
 	void SendMessage( std::string aMessage );
 
 	void Attack(int hero_id, int target_id);
-	void Move(int hero_id, POS target_pos);
+	void Move(int hero_id, Position target_pos);
 	virtual void Process() = 0;
 	virtual void MatchEnd() {}; // reset any data here which is persistent between ticks
 	virtual void ConnectionClosed();
