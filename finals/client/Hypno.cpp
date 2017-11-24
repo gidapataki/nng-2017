@@ -92,7 +92,7 @@ void Hypno::Process() {
 			}
 		} else {
 			auto lane = GetLane(hero.pos);
-			const int lane_sep = 13;
+			const int lane_sep = 6;
 			std::cerr << "C " << hero.id << " " << lane << std::endl;
 			if (lane > lane_sep) {
 				AttackTop(hero);
@@ -511,7 +511,7 @@ int Hypno::GetAdvance(const Position& pos) const {
 
 int Hypno::PreferLane(const MAP_OBJECT& hero) const {
 	const int advance_max = MaxX() + MaxY();
-	const int lane_sep = 13;
+	const int lane_sep = 6;
 
 	const int advance_low = 30;
 	const int advance_high = advance_max - advance_low;
