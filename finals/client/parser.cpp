@@ -205,6 +205,12 @@ void PARSER::Parse(const std::vector<std::string> &ServerResponse)
 	}
 }
 
+const MAP_OBJECT *PARSER::GetUnitByID(int id) const
+{
+	for (std::vector<MAP_OBJECT>::const_iterator it=Units.begin();it!=Units.end();++it) { if (it->id == id) return &*it; }
+	return NULL;
+}
+
 MAP_OBJECT *PARSER::GetUnitByID(int id)
 {
 	for (std::vector<MAP_OBJECT>::iterator it=Units.begin();it!=Units.end();++it) { if (it->id == id) return &*it; }

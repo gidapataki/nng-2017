@@ -84,6 +84,7 @@ public:
 
 	GROUND_TYPE GetAt(const Position &p) const { return p.x<w && p.y<h ? Arena[p.x + p.y*w] : WALL; }
 	MAP_OBJECT *GetUnitByID(int id);
+	const MAP_OBJECT *GetUnitByID(int id) const;
 	PLAYER_INFO *GetPlayerByID(int player_id);
 	enum MATCH_RESULT {
 		ONGOING,

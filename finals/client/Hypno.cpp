@@ -14,19 +14,26 @@ Hypno::Hypno() {
 	// nothing to see here
 }
 
-void Hypno::AttackMove(int hero_id, const Position& pos) {
+Position Hypno::FightOrFlight(int hero_id) const {
 	auto dmg_map = GetDamageMap();
 	auto hp_map = GetHPMap();
 	auto hero = mParser.GetUnitByID(hero_id);
+	if (dmg_map[hero->pos] <= 0) {
+		return hero->pos;
+	}
+	auto neighbours = GetNeighbours(hero->pos);
+	auto target_pos = *std::min_element(begin(neighbours), end(neighbours),
+		[&](auto lhs, auto rhs) {
+			return dmg_map[lhs] < dmg_map[rhs];
+		}
+	);
+}
 
-	// try to backtrack
-	if (dmg_map[hero->pos] > 0) {
-		auto neighbours = GetNeighbours(hero->pos);
-		auto target_pos = *std::min_element(begin(neighbours), end(neighbours),
-			[&](auto lhs, auto rhs) {
-				return dmg_map[lhs] < dmg_map[rhs];
-			}
-		);
+void Hypno::AttackMove(int hero_id, const Position& pos) {
+
+	auto hero = mParser.GetUnitByID(hero_id);
+	auto target_pos = FightOrFlight(hero_id);
+	if (target_pos != hero->pos) {
 		Move(hero_id, target_pos);
 	} else {
 		auto possible_targets = GetEnemyObjectsNear(hero->pos, HERO_RANGE_SQ);
