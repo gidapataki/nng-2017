@@ -865,14 +865,16 @@ bool Hypno::IsAtTop(const MAP_OBJECT& unit) const {
 	auto pos = unit.pos;
 	return
 		(pos.y > 12 && pos.x < 8) ||
-		(pos.y > MaxY() - 8 && pos.x < MaxX() - 12);
+		(pos.y > MaxY() - 8 && pos.x < MaxX() - 12) ||
+		((pos.y > MaxY() - 8 && pos.x >= MaxX() - 12) && GetLane(unit.pos) > 5);
 }
 
 bool Hypno::IsAtDown(const MAP_OBJECT& unit) const {
 	auto pos = unit.pos;
 	return
 		(pos.x > 12 && pos.y < 8) ||
-		(pos.x > MaxX() - 8 && pos.y < MaxY() - 12);
+		(pos.x > MaxX() - 8 && pos.y < MaxY() - 12) ||
+		(pos.x > MaxX() - 8 && pos.y >= MaxY() - 12 && GetLane(unit.pos) < -5);
 }
 
 bool Hypno::IsAtMid(const MAP_OBJECT& unit) const {
