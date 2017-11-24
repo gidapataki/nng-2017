@@ -239,32 +239,33 @@ void Hypno::Process() {
 	}
 	for (auto& hero : GetControlledHeroes()) {
 		if (IsNearOurBase(hero)) {
-			auto fwd = "MID";
 			if (IsEnemyInside()) {
 				AttackInside(hero);
 			}
-			if (!HasTopHero() && (hero.id % 2 == 1)) {
-				fwd = "TOP";
+			if (!HasTopHero()) {
 				AttackTop(hero);
-			} else if (!HasDownHero() && (hero.id % 2 == 0)) {
-				fwd = "DOWN";
+			} else if (!HasDownHero()) {
 				AttackDown(hero);
 			} else {
 				AttackMid(hero);
 			}
-			#if 0
-			std::cerr << "NEAR " << fwd << " " << hero.id << " " << hero.pos << std::endl;
-			#endif
 		} else {
-			#if 0
-			std::cerr << "FAR " << hero.id << " " << hero.pos << std::endl;
-			#endif
 			if (IsAtTop(hero)) {
 				AttackTop(hero);
 			} else if (IsAtDown(hero)) {
 				AttackDown(hero);
 			} else {
-				AttackMid(hero);
+				if (IsGangOfFourHigh(hero)) {
+					if (!HasDownHero()) {
+						AttackDown(hero);
+					} else if (!HasTopHero()) {
+						AttackTop(hero);
+					} else {
+						AttackMid(hero);
+					}
+				} else {
+					AttackMid(hero);
+				}
 			}
 		}
 	}
@@ -879,4 +880,30 @@ std::vector<MAP_OBJECT> Hypno::GetMidMinions() const {
 		}
 	}
 	return vec;
+}
+
+bool Hypno::IsGangOfFourHigh(const MAP_OBJECT& unit) const {
+	// if GOF in middle, and has highest id
+	if (!IsAtMid(unit)) {
+		return false;
+	}
+
+	std::vector<MAP_OBJECT> gof;
+	for (auto& hero : GetOurHeroes()) {
+		if (IsAtMid(hero)) {
+			gof.push_back(hero);
+		}
+	}
+
+	if (gof.empty() || gof.size() < 4) {
+		// failsafe
+		return false;
+	}
+
+	int high_id = gof[0].id;
+	for (auto& hero : gof) {
+		high_id = std::max(high_id, hero.id);
+	}
+
+	return unit.id == high_id;
 }

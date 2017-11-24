@@ -104,6 +104,8 @@ protected:
 	bool HasDownHero() const;
 	bool IsEnemyInside() const;
 
+	bool IsGangOfFourHigh(const MAP_OBJECT& unit) const;
+
 	std::string mPreferredOpponents;
 	std::map<int, int> mSuccesfulEnemyHeroes;
 	std::map<int, Position> mLastPositionOfMinions;
