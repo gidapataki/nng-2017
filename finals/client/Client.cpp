@@ -1,6 +1,8 @@
-#include "stdafx.h"
 #include "Client.h"
+#include "stdafx.h"
 #include <sstream>
+#include <unistd.h>
+
 #define SERVER_PORT 4242
 
 CLIENT::CLIENT()
@@ -55,7 +57,7 @@ bool CLIENT::Init()
 	}
 #endif
 	unsigned long addr = inet_addr( strIPAddress.c_str() );
-	sockaddr_in ServerSocketAddress;	
+	sockaddr_in ServerSocketAddress;
 	ServerSocketAddress.sin_addr.s_addr = addr;
 	ServerSocketAddress.sin_family = AF_INET;
 	ServerSocketAddress.sin_port = htons( SERVER_PORT );
@@ -102,7 +104,7 @@ void CLIENT::SendMessage( std::string aMessage )
 	if (NeedDebugLog() && mDebugLog.is_open())
 	{
 		mDebugLog<<"Sent: "<<aMessage;
-	}	
+	}
 	int SentBytes = send( mConnectionSocket, aMessage.c_str(), int(aMessage.size()), 0 );
 	if (SentBytes!=aMessage.size())
 	{
@@ -156,10 +158,10 @@ void CLIENT::Run()
 #endif
 		);
 	}
-	
+
 	std::string strLastLineRemaining;
 	std::vector<std::string> LastServerResponse;
-	int last_connect_try_time = GetTickCount();
+
 	for(;;)
 	{
 		if (LinkDead())
@@ -274,7 +276,7 @@ void CLIENT::Run()
 							}
 						}
 						LastServerResponse.clear();
-					}				
+					}
 				}
 			}
 		}

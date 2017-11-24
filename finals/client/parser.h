@@ -1,4 +1,7 @@
 #pragma once
+#include <vector>
+#include <string>
+
 static const int BASE_MAX_HP = 10000;
 static const int TURRET_MAX_HP = 2000;
 static const int MINION_MAX_HP = 200;
@@ -101,7 +104,7 @@ public:
 	};
 	MATCH_TYPE match_type;
 	int level[2]; // your and enemy hero levels
-	
+
 	std::vector<MAP_OBJECT> Units;
 	std::vector<CONTROLLER_INFO> Controllers;
 	std::vector<ATTACK_INFO> Attacks;

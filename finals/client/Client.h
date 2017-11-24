@@ -1,11 +1,15 @@
 #pragma once
 #include "parser.h"
 #include "distcache.h"
+#include <vector>
+#include <string>
+#include <sstream>
+#include <fstream>
 
 class CLIENT
 {
 public:
-	PARSER mParser;	
+	PARSER mParser;
 	std::stringstream command_buffer;
 	DISTCACHE mDistCache;
 	CLIENT();
