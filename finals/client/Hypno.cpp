@@ -658,13 +658,13 @@ bool Hypno::IsRightLane(const Position& pos) const {
 
 std::vector<MAP_OBJECT> Hypno::GetTopEnemyTurrets() const {
 	return OrderByX(GetObjects([&](const MAP_OBJECT& unit) {
-		return unit.t == TURRET && unit.side == 1 && IsTopLane(unit.pos);
+		return unit.t == TURRET && unit.side == 1 && IsAtTop(unit);
 	}));
 }
 
 std::vector<MAP_OBJECT> Hypno::GetDownEnemyTurrets() const {
 	return OrderByY(GetObjects([&](const MAP_OBJECT& unit) {
-		return unit.t == TURRET && unit.side == 1 && IsRightLane(unit.pos);
+		return unit.t == TURRET && unit.side == 1 && IsAtTop(unit);
 	}));
 }
 
@@ -677,13 +677,13 @@ std::vector<MAP_OBJECT> Hypno::GetMidEnemyTurrets() const {
 
 std::vector<MAP_OBJECT> Hypno::GetTopOurTurrets() const {
 	return OrderByX(GetObjects([&](const MAP_OBJECT& unit) {
-		return unit.t == TURRET && unit.side == 0 && IsLeftLane(unit.pos);
+		return unit.t == TURRET && unit.side == 0 && IsAtTop(unit);
 	}));
 }
 
 std::vector<MAP_OBJECT> Hypno::GetDownOurTurrets() const {
 	return OrderByY(GetObjects([&](const MAP_OBJECT& unit) {
-		return unit.t == TURRET && unit.side == 0 && IsDownLane(unit.pos);
+		return unit.t == TURRET && unit.side == 0 && IsAtDown(unit);
 	}));
 }
 
