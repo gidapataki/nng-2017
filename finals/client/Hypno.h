@@ -21,6 +21,8 @@ protected:
 	void AttackMove(int hero_id, const Position& pos);
 	void AttackTop(const MAP_OBJECT& hero);
 
+	Matrix<double> GetDamageMap() const;
+	Matrix<double> GetHPMap() const;
 	Matrix<double> GetHeatMap() const;
 	Matrix<double> GetTowerHeatMap() const;
 	Matrix<double> GetUnitHeatMap() const;

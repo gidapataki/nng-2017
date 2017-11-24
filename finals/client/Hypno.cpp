@@ -185,6 +185,83 @@ std::vector<MAP_OBJECT> Hypno::GetObjects(std::function<bool(const MAP_OBJECT&)>
 	return vec;
 }
 
+Matrix<double> Hypno::GetDamageMap() const {
+	Matrix<double> result{
+		static_cast<Matrix<double>::size_type>(mParser.w),
+		static_cast<Matrix<double>::size_type>(mParser.h),
+		0
+	};
+
+
+	for (auto& unit : mParser.Units) {
+		// skip bases for now
+		if (unit.t == UNIT_TYPE::BASE) {
+			continue;
+		}
+
+		int sign = (unit.side == 0 ? -1 : 1);
+
+		int range_sq = mParser.GetAttackRangeSquaredOfUnit(unit);
+		int dmg = mParser.GetDamageOfUnit(unit);
+
+		const int radius = 6;
+		for (int y = unit.pos.y - radius; y <= unit.pos.y + radius; ++y) {
+			for (int x = unit.pos.x - radius; x <= unit.pos.x + radius; ++x) {
+				if (x < 0 || x >= MaxX() || y < 0 || y >= MaxY()) {
+					continue;
+				}
+				int d_sq = Position{x, y}.DistSquare(unit.pos);
+				if (d_sq > range_sq) {
+					continue;
+				}
+				if (x == 2 && y == result.height() - 1) {
+					assert(false);
+				}
+				result.at(x, y) += sign * dmg;
+			}
+		}
+	}
+
+	return result;
+}
+
+Matrix<double> Hypno::GetHPMap() const {
+	Matrix<double> result{
+		static_cast<Matrix<double>::size_type>(mParser.w),
+		static_cast<Matrix<double>::size_type>(mParser.h),
+		0
+	};
+
+
+	for (auto& unit : mParser.Units) {
+		// skip bases for now
+		if (unit.t == UNIT_TYPE::BASE) {
+			continue;
+		}
+
+		int sign = (unit.side == 0 ? -1 : 1);
+
+		int range_sq = mParser.GetAttackRangeSquaredOfUnit(unit);
+		int hp = unit.hp;
+
+		const int radius = 6;
+		for (int y = unit.pos.y - radius; y <= unit.pos.y + radius; ++y) {
+			for (int x = unit.pos.x - radius; x <= unit.pos.x + radius; ++x) {
+				if (x < 0 || x > MaxX() || y < 0 || y > MaxY()) {
+					continue;
+				}
+				int d_sq = Position{x, y}.DistSquare(unit.pos);
+				if (d_sq > range_sq) {
+					continue;
+				}
+				result(x, y) += sign * hp;
+			}
+		}
+	}
+
+	return result;
+}
+
 Matrix<double> Hypno::GetHeatMap() const {
 	return GetTowerHeatMap() + GetUnitHeatMap();
 }
