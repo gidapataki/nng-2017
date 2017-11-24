@@ -42,10 +42,20 @@ Position Hypno::FightOrFlight(int hero_id) const {
 		our_turret_map + enemy_turret_map +
 		our_hero_map + enemy_hero_map;
 
-	if (enemy_minion_map[hero->pos] > 10 &&
-		our_turret_map[hero->pos] == 0 &&
-		our_minion_map[hero->pos] == 0)
-	{
+	int minions_attacked = 0;
+	int minions_in_range = 0;
+	for (auto& minion : GetEnemyMinions()) {
+		if (IsNeighbourOfCircle(hero->pos, minion.pos, MINION_RANGE_SQ)) {
+		// if (hero->pos.DistSquare(minion.pos) <= MINION_RANGE_SQ) {
+			if (our_turret_map[minion.pos] != 0 || our_minion_map[minion.pos] != 0) {
+				++minions_attacked;
+			}
+			++minions_in_range;
+		}
+	}
+	if (minions_in_range != minions_attacked) {
+		// std::cerr << hero->pos << ": minions "
+		// 	<< minions_attacked << "/" << minions_in_range << std::endl;
 		return Retreat(dmg_map, *hero);
 	}
 
