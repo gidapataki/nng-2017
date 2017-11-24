@@ -84,11 +84,11 @@ void Hypno::Process() {
 			}
 		} else {
 			auto lane = GetLane(hero.pos);
-			const int lane_sep = 6;
+			const int lane_sep = 13;
 			std::cerr << "CONTINUE " << hero.id << " " << lane << std::endl;
 			if (lane > lane_sep) {
 				AttackTop(hero);
-			} else if (lane < lane_sep) {
+			} else if (lane < -lane_sep) {
 				AttackDown(hero);
 			} else {
 				AttackMid(hero);
