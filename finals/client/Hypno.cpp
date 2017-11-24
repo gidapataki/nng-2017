@@ -27,6 +27,9 @@ Position Hypno::Retreat(const Matrix<double>& dmg_map, const MAP_OBJECT& hero) c
 
 Position Hypno::FightOrFlight(int hero_id) const {
 	auto hero = mParser.GetUnitByID(hero_id);
+	if (IsNearOurBase(*hero)) {
+		return hero->pos;
+	}
 
 	auto our_minion_map = GetDamageMap(GetOurMinions());
 	auto enemy_minion_map = GetDamageMap(GetEnemyMinions());
@@ -42,18 +45,25 @@ Position Hypno::FightOrFlight(int hero_id) const {
 		our_turret_map + enemy_turret_map +
 		our_hero_map + enemy_hero_map;
 
-	if (enemy_minion_map[hero->pos] > 10 &&
-		our_turret_map[hero->pos] == 0 &&
-		our_minion_map[hero->pos] == 0)
-	{
+	int minions_attacked = 0;
+	int minions_in_range = 0;
+	for (auto& minion : GetEnemyMinions()) {
+		if (IsNeighbourOfCircle(hero->pos, minion.pos, MINION_RANGE_SQ)) {
+		// if (hero->pos.DistSquare(minion.pos) <= MINION_RANGE_SQ) {
+			if (our_turret_map[minion.pos] != 0 || our_minion_map[minion.pos] != 0) {
+				++minions_attacked;
+			}
+			++minions_in_range;
+		}
+	}
+	if (minions_in_range != minions_attacked) {
+		// std::cerr << hero->pos << ": minions "
+		// 	<< minions_attacked << "/" << minions_in_range << std::endl;
 		return Retreat(dmg_map, *hero);
 	}
 
 	auto hp_map = GetHPMap();
 	if (dmg_map[hero->pos] <= 0) {
-		return hero->pos;
-	}
-	if (IsNearOurBase(*hero)) {
 		return hero->pos;
 	}
 	auto dmg_deficit = dmg_map[hero->pos];
@@ -77,6 +87,25 @@ void Hypno::AttackMove(int hero_id, const Position& pos) {
 		} else {
 			Move(hero_id, mDistCache.GetNextTowards(hero->pos, pos));
 		}
+	}
+}
+
+void Hypno::AttackInside(const MAP_OBJECT& hero) {
+	std::vector<MAP_OBJECT> enemies;
+	for (auto& unit : GetEnemyHeroes()) {
+		if (IsNearOurBase(unit)) {
+			enemies.push_back(unit);
+		}
+	}
+
+	std::sort(enemies.begin(), enemies.end(),
+		[](const MAP_OBJECT& lhs, const MAP_OBJECT& rhs) {
+			return lhs.hp < rhs.hp;
+		});
+	if (enemies.empty()) {
+		AttackMid(hero);
+	} else {
+		AttackMove(hero.id, enemies.front().pos);
 	}
 }
 
@@ -120,8 +149,11 @@ void Hypno::AttackMid(const MAP_OBJECT& hero) {
 
 void Hypno::Process() {
 	for (auto& hero : GetOurHeroes()) {
-		if (IsNearOurBase(hero, 12)) {
+		if (IsNearOurBase(hero)) {
 			auto fwd = "MID";
+			if (IsEnemyInside()) {
+				AttackInside(hero);
+			}
 			if (!HasTopHero() && (hero.id % 2 == 1)) {
 				fwd = "TOP";
 				AttackTop(hero);
@@ -678,6 +710,15 @@ bool Hypno::HasTopHero() const {
 bool Hypno::HasDownHero() const {
 	for (auto& unit : GetOurHeroes()) {
 		if (IsAtDown(unit)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool Hypno::IsEnemyInside() const {
+	for (auto& unit : GetEnemyHeroes()) {
+		if (IsNearOurBase(unit)) {
 			return true;
 		}
 	}
