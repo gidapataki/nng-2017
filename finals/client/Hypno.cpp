@@ -7,7 +7,7 @@ Hypno::Hypno() {
 }
 
 void Hypno::AttackMove(int hero_id, const Position& pos) {
-
+	Move(hero_id, pos);
 }
 
 std::vector<MAP_OBJECT> Hypno::GetEnemyObjects() const {
