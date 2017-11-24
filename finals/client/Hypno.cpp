@@ -13,7 +13,7 @@ CLIENT* CreateClient()
 	return new Hypno();
 }
 
-std::vector<int> Hypno::GetOurHeros() {
+std::vector<int> Hypno::GetOurHeroes() {
 	std::vector<int> vec;
 	for (auto& cc : mParser.Controllers) {
 		if (cc.controller_id == 0) {

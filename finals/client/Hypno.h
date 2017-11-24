@@ -16,5 +16,5 @@ protected:
 	virtual bool NeedDebugLog() { return true; }
 	virtual void Process();
 
-	std::vector<int> GetOurHeros();
+	std::vector<int> GetOurHeroes();
 };
