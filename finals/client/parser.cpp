@@ -30,6 +30,10 @@ void PARSER::ParseMap(const std::vector<std::string> &ServerResponse)
 	}
 }
 
+PARSER::GROUND_TYPE PARSER::GetAt(const Position &p) const {
+	return p.x<w && p.y<h ? Arena[p.x + p.y*w] : WALL;
+}
+
 void PARSER::ParsePlayers(const std::vector<std::string> &ServerResponse)
 {
 	Players.clear();
