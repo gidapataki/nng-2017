@@ -11,13 +11,20 @@ Hypno::Hypno() {
 	// nothing to see here
 }
 
+std::ostream& operator<<(std::ostream& os, const Position& position) {
+	os << "(" << position.x << ", " << position.y << ")";
+	return os;
+}
+
 void Hypno::AttackMove(int hero_id, const Position& pos) {
-	auto possible_targets = GetEnemyObjectsNear(pos, hero_id);
+	auto hero = mParser.GetUnitByID(hero_id);
+	auto possible_targets = GetEnemyObjectsNear(hero->pos, HERO_RANGE_SQ);
 	if (!possible_targets.empty()) {
 		// TODO sort somehow
 		Attack(hero_id, possible_targets.front().id);
+	} else {
+		Move(hero_id, mDistCache.GetNextTowards(hero->pos, pos));
 	}
-	Move(hero_id, pos);
 }
 
 void Hypno::Process() {
