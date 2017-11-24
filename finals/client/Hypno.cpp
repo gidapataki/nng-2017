@@ -63,7 +63,7 @@ Position Hypno::FightOrFlight(int hero_id) const {
 		if (!(hp_map[hero->pos] <= 10*MINION_MAX_HP)) {
 			return Retreat(dmg_map, *hero);
 		}
-		std::cerr << "Would retreat, but outnumber" << std::endl;
+		// std::cerr << "Would retreat, but outnumber" << std::endl;
 	}
 
 	if (dmg_map[hero->pos] <= 0) {
