@@ -4,6 +4,7 @@
 #include "Matrix.h"
 #include <vector>
 #include <string>
+#include <functional>
 
 
 class Hypno : public CLIENT
@@ -21,8 +22,10 @@ protected:
 	virtual bool NeedDebugLog() { return true; }
 	virtual void Process();
 
+	Matrix<int> GetHeatMap() const;
+
 	std::vector<MAP_OBJECT> GetOurTurrets();
 	std::vector<MAP_OBJECT> GetEnemyTurrets();
-	std::vector<int> GetOurHeroes();
-	Matrix<int> GetHeatMap() const;
+	std::vector<MAP_OBJECT> GetOurHeroes();
+	std::vector<MAP_OBJECT> GetObjects(std::function<bool(const MAP_OBJECT&)> fn);
 };

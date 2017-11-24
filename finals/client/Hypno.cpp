@@ -1,4 +1,5 @@
 #include "Hypno.h"
+#include <set>
 
 
 Hypno::Hypno() {
@@ -19,8 +20,7 @@ std::vector<MAP_OBJECT> Hypno::GetEnemyObjects() const {
 	return objects;
 }
 
-void Hypno::Process()
-{
+void Hypno::Process() {
 }
 
 CLIENT* CreateClient()
@@ -28,15 +28,30 @@ CLIENT* CreateClient()
 	return new Hypno();
 }
 
-std::vector<int> Hypno::GetOurHeroes() {
-	std::vector<int> vec;
-	for (auto& cc : mParser.Controllers) {
-		if (cc.controller_id == 0) {
-			vec.push_back(cc.hero_id);
+std::vector<MAP_OBJECT> Hypno::GetObjects(std::function<bool(const MAP_OBJECT&)> fn) {
+	std::vector<MAP_OBJECT> vec;
+	for (auto& unit : mParser.Units) {
+		if (fn(unit)) {
+			vec.push_back(unit);
 		}
 	}
 
 	return vec;
+}
+
+std::vector<MAP_OBJECT> Hypno::GetOurHeroes() {
+	std::vector<MAP_OBJECT> vec;
+	std::set<int> ids;
+
+	for (auto& cc : mParser.Controllers) {
+		if (cc.controller_id == 0) {
+			ids.insert(cc.hero_id);
+		}
+	}
+
+	return GetObjects([&](const MAP_OBJECT& unit) {
+		return (unit.t == HERO && ids.count(unit.id) > 0);
+	});
 }
 
 std::vector<MAP_OBJECT> Hypno::GetOurTurrets() {
