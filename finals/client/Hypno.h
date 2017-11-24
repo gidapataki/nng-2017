@@ -35,6 +35,7 @@ protected:
 	std::vector<MAP_OBJECT> GetEnemyMinions() const;
 	std::vector<MAP_OBJECT> GetObjects(std::function<bool(const MAP_OBJECT&)> fn) const;
 	std::vector<MAP_OBJECT> GetEnemyObjects() const;
+	std::vector<MAP_OBJECT> GetOurObjects() const;
 	std::vector<MAP_OBJECT> GetEnemyObjectsNear(
 		const Position& pos, int distance_sq) const;
 	MAP_OBJECT GetEnemyBase() const;

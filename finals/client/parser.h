@@ -105,4 +105,6 @@ public:
 	int GetEnemyHeroMaxHP() const;
 
 	int GetMaxHPOfUnit(const MAP_OBJECT& unit) const;
+	int GetAttackRangeSquaredOfUnit(const MAP_OBJECT& unit) const;
+	int GetDamageOfUnit(const MAP_OBJECT& unit) const;
 };

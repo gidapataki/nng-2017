@@ -111,6 +111,12 @@ std::vector<MAP_OBJECT> Hypno::GetEnemyObjects() const {
 	});
 }
 
+std::vector<MAP_OBJECT> Hypno::GetOurObjects() const {
+	return GetObjects([](const MAP_OBJECT& obj) {
+		return obj.side == 0;
+	});
+}
+
 std::vector<MAP_OBJECT> Hypno::GetEnemyObjectsNear(
 	const Position& pos, int distance_sq) const
 {
