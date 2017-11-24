@@ -71,8 +71,12 @@ protected:
 	bool IsRightLane(const Position& pos) const;
 
 	std::vector<MAP_OBJECT> GetTopEnemyTurrets() const;
-	std::vector<MAP_OBJECT> GetRightEnemyTurrets() const;
+	std::vector<MAP_OBJECT> GetDownEnemyTurrets() const;
 	std::vector<MAP_OBJECT> GetMidEnemyTurrets() const;
+
+	std::vector<MAP_OBJECT> GetTopOurTurrets() const;
+	std::vector<MAP_OBJECT> GetDownOurTurrets() const;
+	std::vector<MAP_OBJECT> GetMidOurTurrets() const;
 
 	std::vector<MAP_OBJECT> OrderByX(std::vector<MAP_OBJECT> units, bool reverse=false) const;
 	std::vector<MAP_OBJECT> OrderByY(std::vector<MAP_OBJECT> units, bool reverse=false) const;
@@ -81,6 +85,11 @@ protected:
 	std::vector<MAP_OBJECT> GetTopMinions() const;
 	std::vector<MAP_OBJECT> GetDownMinions() const;
 	std::vector<MAP_OBJECT> GetMidMinions() const;
+
+	// minions + turrets on lanes
+	std::vector<MAP_OBJECT> GetTopFallbackObjects() const;
+	std::vector<MAP_OBJECT> GetDownFallbackObjects() const;
+	std::vector<MAP_OBJECT> GetMidFallbackObjects() const;
 
 	static bool LessByX(const MAP_OBJECT& lhs, const MAP_OBJECT& rhs);
 	static bool LessByY(const MAP_OBJECT& lhs, const MAP_OBJECT& rhs);
