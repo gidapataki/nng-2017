@@ -25,12 +25,23 @@ void Hypno::AttackMove(int hero_id, const Position& pos) {
 }
 
 void Hypno::AttackTop(const MAP_OBJECT& hero) {
-	// if ()
+	if (hero.pos.y < MaxY() - 4 && hero.pos.x < 6) {
+		AttackMove(hero.id, {4, MaxY() - 4});
+	} else {
+		auto turrets = GetTopEnemyTurrets();
+		if (turrets.empty()) {
+			AttackMove(hero.id, {MaxX() - 1, MaxY() - 1});
+		} else {
+			auto target = turrets[0].pos;
+			target.x -= 1;
+			AttackMove(hero.id, target);
+		}
+	}
 }
 
 void Hypno::Process() {
 	for (auto& hero : GetOurHeroes()) {
-		AttackMove(hero.id, GetEnemyBase().pos);
+		AttackTop(hero);
 	}
 }
 
