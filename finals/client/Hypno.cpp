@@ -11,11 +11,6 @@ Hypno::Hypno() {
 	// nothing to see here
 }
 
-std::ostream& operator<<(std::ostream& os, const Position& position) {
-	os << "(" << position.x << ", " << position.y << ")";
-	return os;
-}
-
 void Hypno::AttackMove(int hero_id, const Position& pos) {
 	auto hero = mParser.GetUnitByID(hero_id);
 	auto possible_targets = GetEnemyObjectsNear(hero->pos, HERO_RANGE_SQ);
