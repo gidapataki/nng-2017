@@ -33,7 +33,7 @@ void Hypno::AttackTop(const MAP_OBJECT& hero) {
 			AttackMove(hero.id, {MaxX() - 1, MaxY() - 1});
 		} else {
 			auto target = turrets[0].pos;
-			target.x -= 1;
+			target.x -= 3;
 			AttackMove(hero.id, target);
 		}
 	}
