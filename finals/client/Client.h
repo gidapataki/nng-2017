@@ -43,4 +43,4 @@ protected:
 #endif
 };
 
-CLIENT *CreateClient();
+CLIENT *CreateClient(std::string preferredOpponents = "test");

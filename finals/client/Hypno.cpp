@@ -6,11 +6,12 @@
 #include <algorithm>
 
 
-CLIENT* CreateClient() {
-	return new Hypno();
+CLIENT* CreateClient(std::string preferredOpponents) {
+	return new Hypno(std::move(preferredOpponents));
 }
 
-Hypno::Hypno() {
+Hypno::Hypno(std::string preferredOpponents) :
+	mPreferredOpponents(std::move(preferredOpponents)) {
 	// nothing to see here
 }
 

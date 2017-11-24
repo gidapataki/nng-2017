@@ -10,15 +10,12 @@
 class Hypno : public CLIENT
 {
 public:
-	Hypno();
+	Hypno(std::string preferredOpponents="test");
 
 protected:
 	virtual std::string GetPassword() { return std::string("c6gR92#1"); }
 	virtual std::string GetPreferredOpponents() {
 		// comment out those which you dont need
-		return std::string("test");
-		return std::string("melee");
-		return std::string("duel");
 	}
 	virtual bool NeedDebugLog() { return true; }
 	virtual void Process();
@@ -88,4 +85,6 @@ protected:
 	bool IsAtDown(const MAP_OBJECT& unit) const;
 	bool HasTopHero() const;
 	bool HasDownHero() const;
+
+	std::string mPreferredOpponents;
 };

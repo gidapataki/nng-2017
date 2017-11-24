@@ -365,16 +365,14 @@ void CLIENT::Move(int hero_id, Position target_pos)
 int main(int argc, char* argv[])
 {
 	std::cout.sync_with_stdio(false);
-	std::string server_address;
-	if (argc<2)
+	std::string server_address = "172.22.22.239";
+	std::string preferredOpponents = "test";
+	if (argc>1)
 	{
-		server_address = "172.22.22.239";
-		std::cout<<"using default server address: " + server_address <<std::endl;
-	} else
-	{
-		server_address = argv[1];
+		preferredOpponents = argv[1];
 	}
-	CLIENT *pClient = CreateClient();
+	std::cout<<"playing against " + preferredOpponents<<std::endl;
+	CLIENT *pClient = CreateClient(preferredOpponents);
 	/* for debugging:  */
 	std::vector<std::string> test_state;
 	if (LoadPacket("test.txt", test_state))
