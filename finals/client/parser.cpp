@@ -51,6 +51,29 @@ void PARSER::ParsePlayers(const std::vector<std::string> &ServerResponse)
 	}
 }
 
+int PARSER::GetHeroDamage(int side) const {
+	return HERO_DAMAGE_BASE + level[side] * HERO_DAMAGE_PER_LEVEL;
+}
+
+int PARSER::GetOurHeroDamage() const {
+	return GetHeroDamage(0);
+}
+
+int PARSER::GetEnemyHeroDamage() const {
+	return GetHeroDamage(1);
+}
+
+int PARSER::GetHeroHP(int side) const {
+	return HERO_MAX_HP_BASE + level[side] * HERO_MAX_HP_PER_LEVEL;
+}
+
+int PARSER::GetOurHeroHP() const {
+	return GetHeroHP(0);
+}
+
+int PARSER::GetEnemyHeroHP() const {
+	return GetHeroHP(1);
+}
 
 void PARSER::Parse(const std::vector<std::string> &ServerResponse)
 {

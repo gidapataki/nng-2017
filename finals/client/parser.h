@@ -95,4 +95,12 @@ public:
 	void Parse(const std::vector<std::string> &ServerResponse);
 	void ParseMap(const std::vector<std::string> &ServerResponse);
 	void ParsePlayers(const std::vector<std::string> &ServerResponse);
+
+	int GetHeroDamage(int side) const;
+	int GetOurHeroDamage() const;
+	int GetEnemyHeroDamage() const;
+
+	int GetHeroHP(int side) const;
+	int GetOurHeroHP() const;
+	int GetEnemyHeroHP() const;
 };
