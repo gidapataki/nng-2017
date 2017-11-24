@@ -51,6 +51,14 @@ std::vector<MAP_OBJECT> Hypno::GetEnemyObjects() const {
 	});
 }
 
+std::vector<MAP_OBJECT> Hypno::GetEnemyObjectsNear(
+	const Position& pos, int distance_sq) const
+{
+	return GetObjects([&](const MAP_OBJECT& obj) {
+		return obj.side != 0 && pos.DistSquare(obj.pos) <= distance_sq;
+	});
+}
+
 std::vector<MAP_OBJECT> Hypno::GetObjects(std::function<bool(const MAP_OBJECT&)> fn) const {
 	std::vector<MAP_OBJECT> vec;
 	for (auto& unit : mParser.Units) {
