@@ -83,4 +83,9 @@ protected:
 	int GetAdvance(const Position& pos) const;
 	int PreferLane(const MAP_OBJECT& hero) const;
 	bool IsNearOurBase(const MAP_OBJECT& unit, int dst=13) const;
+
+	bool IsAtTop(const MAP_OBJECT& unit) const;
+	bool IsAtDown(const MAP_OBJECT& unit) const;
+	bool HasTopHero() const;
+	bool HasDownHero() const;
 };

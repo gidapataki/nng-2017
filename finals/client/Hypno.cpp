@@ -92,24 +92,18 @@ void Hypno::AttackMid(const MAP_OBJECT& hero) {
 
 void Hypno::Process() {
 	for (auto& hero : GetOurHeroes()) {
-		if (IsNearOurBase(hero, 15)) {
-			auto prefer = PreferLane(hero);
-			std::cerr << "P " << hero.id << " " << prefer << std::endl;
-			if (prefer > 0) {
+		if (IsNearOurBase(hero, 12)) {
+			if (!HasTopHero() && (hero.id % 2 == 1)) {
 				AttackTop(hero);
-			} else if (prefer < 0) {
+			} else if (!HasDownHero() && (hero.id % 2 == 0)) {
 				AttackDown(hero);
-			} else {
-				AttackMid(hero);
 			}
+			AttackMid(hero);
 		} else {
-			auto lane = GetLane(hero.pos);
-			const int lane_sep = 6;
-			std::cerr << "C " << hero.id << " " << lane << std::endl;
-			if (lane > lane_sep) {
+			if (IsAtTop(hero)) {
 				AttackTop(hero);
-			} else if (lane < -lane_sep) {
-				AttackDown(hero);
+			} else if (IsAtDown(hero)) {
+				AttackTop(hero);
 			} else {
 				AttackMid(hero);
 			}
@@ -623,4 +617,34 @@ int Hypno::PreferLane(const MAP_OBJECT& hero) const {
 
 bool Hypno::IsNearOurBase(const MAP_OBJECT& unit, int dst) const {
 	return unit.pos.x < dst && unit.pos.y < dst;
+}
+
+bool Hypno::IsAtTop(const MAP_OBJECT& unit) const {
+	auto pos = unit.pos;
+	return ((pos.y > 12 && pos.x < 5) ||
+		(pos.y > MaxY() - 5 && pos.x < MaxX() - 12));
+}
+
+bool Hypno::IsAtDown(const MAP_OBJECT& unit) const {
+	auto pos = unit.pos;
+	return ((pos.x > 12 && pos.y < 5) ||
+		(pos.x > MaxX() - 5 && pos.y < MaxY() - 12));
+}
+
+bool Hypno::HasTopHero() const {
+	for (auto& unit : GetEnemyHeroes()) {
+		if (IsAtTop(unit)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool Hypno::HasDownHero() const {
+	for (auto& unit : GetEnemyHeroes()) {
+		if (IsAtDown(unit)) {
+			return true;
+		}
+	}
+	return false;
 }
