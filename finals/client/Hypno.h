@@ -14,8 +14,6 @@ public:
 
 	void AttackMove(int hero_id, const Position& pos);
 
-	std::vector<MAP_OBJECT> GetEnemyObjects() const;
-
 protected:
 	virtual std::string GetPassword() { return std::string("c6gR92#1"); }
 	virtual std::string GetPreferredOpponents() { return std::string("test"); }
@@ -24,8 +22,9 @@ protected:
 
 	Matrix<int> GetHeatMap() const;
 
-	std::vector<MAP_OBJECT> GetOurTurrets();
-	std::vector<MAP_OBJECT> GetEnemyTurrets();
-	std::vector<MAP_OBJECT> GetOurHeroes();
-	std::vector<MAP_OBJECT> GetObjects(std::function<bool(const MAP_OBJECT&)> fn);
+	std::vector<MAP_OBJECT> GetOurTurrets() const;
+	std::vector<MAP_OBJECT> GetEnemyTurrets() const;
+	std::vector<MAP_OBJECT> GetOurHeroes() const;
+	std::vector<MAP_OBJECT> GetObjects(std::function<bool(const MAP_OBJECT&)> fn) const;
+	std::vector<MAP_OBJECT> GetEnemyObjects() const;
 };
