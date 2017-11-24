@@ -414,41 +414,49 @@ bool Hypno::CanOneHit(const MAP_OBJECT& unit) const {
 	return enemy_hp_map.at(unit.id) <= mParser.GetHeroDamage(!unit.side);
 }
 
-int Hypno::GetPreferredEnemyToAttack(const std::vector<MAP_OBJECT>& enemies) const {
-	assert(!enemies.empty());
+int Hypno::GetPreferredEnemyToAttack(const std::vector<MAP_OBJECT>& enemies_) const {
+	assert(!enemies_.empty());
+
+	std::vector<MAP_OBJECT> enemies;
+	for (auto& enemy : enemies_) {
+		if (enemy_hp_map.at(enemy.id) > 0) {
+			enemies.push_back(enemy);
+		}
+	}
+
+	// everybody dead
+	if (enemies.empty()) {
+		return enemies_.front().id;
+	}
+
 	// one hit a turret if we can
 	for (auto& enemy : enemies) {
-		if (enemy.t == UNIT_TYPE::TURRET && CanOneHit(enemy)
-			&& enemy_hp_map.at(enemy.id) > 0)
-		{
+		if (enemy.t == UNIT_TYPE::TURRET && CanOneHit(enemy)) {
 			return enemy.id;
 		}
 	}
 
-	// one hit a hero if we can
+	// /*one hit*/ a hero if we can
 	for (auto& enemy : enemies) {
-		if (enemy.t == UNIT_TYPE::HERO && CanOneHit(enemy)
-			&& enemy_hp_map.at(enemy.id) > 0)
-		{
+		if (enemy.t == UNIT_TYPE::HERO /*&& CanOneHit(enemy)*/) {
 			return enemy.id;
 		}
 	}
 
 	// one hit a minion if we can
 	for (auto& enemy : enemies) {
-		if (enemy.t == UNIT_TYPE::MINION && CanOneHit(enemy)
-			&& enemy_hp_map.at(enemy.id) > 0)
-		{
+		if (enemy.t == UNIT_TYPE::MINION && CanOneHit(enemy)) {
 			return enemy.id;
 		}
 	}
 
 	auto target = enemies.front();
 	for (auto& enemy : enemies) {
-		if (enemy_hp_map.at(enemy.id) > 0 && enemy.hp < target.hp) {
+		if (enemy.hp < target.hp) {
 			target = enemy;
 		}
 	}
+
 	return target.id;
 }
 
