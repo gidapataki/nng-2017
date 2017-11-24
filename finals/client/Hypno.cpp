@@ -1,6 +1,6 @@
 #include "Hypno.h"
 #include <set>
-
+#include <iostream>
 
 CLIENT* CreateClient()
 {
@@ -21,6 +21,9 @@ void Hypno::AttackMove(int hero_id, const Position& pos) {
 }
 
 void Hypno::Process() {
+	for (auto& hero : GetOurHeroes()) {
+		AttackMove(hero.id, GetEnemyBase().pos);
+	}
 }
 
 std::vector<MAP_OBJECT> Hypno::GetOurHeroes() const {
@@ -62,6 +65,16 @@ std::vector<MAP_OBJECT> Hypno::GetEnemyObjectsNear(
 	return GetObjects([&](const MAP_OBJECT& obj) {
 		return obj.side != 0 && pos.DistSquare(obj.pos) <= distance_sq;
 	});
+}
+
+MAP_OBJECT Hypno::GetEnemyBase() const {
+	for (auto& unit : mParser.Units) {
+		if (unit.t == UNIT_TYPE::BASE && unit.side != 0) {
+			return unit;
+		}
+	}
+	std::cerr << "No enemy base found :scream:" << std::endl;
+	return {};
 }
 
 std::vector<MAP_OBJECT> Hypno::GetObjects(std::function<bool(const MAP_OBJECT&)> fn) const {
